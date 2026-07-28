@@ -77,6 +77,7 @@ def solid_label_sized(
     depth: float = 0.6,
     line_gap: float = 1.6,
     max_width: float | None = None,
+    max_height: float | None = None,
     font: str = "Arial",
     bold: bool = True,
 ) -> Part:
@@ -84,7 +85,8 @@ def solid_label_sized(
 
     `lines` is [(text, cap_height), ...]. Every line is centred
     horizontally and the stack is centred on the origin; the whole block
-    shrinks uniformly if it would exceed max_width. Extruded 0..depth.
+    shrinks uniformly if it would exceed max_width or max_height.
+    Extruded 0..depth.
     """
     style = FontStyle.BOLD if bold else FontStyle.REGULAR
 
@@ -111,10 +113,14 @@ def solid_label_sized(
         return combined
 
     sketch = build(1.0)
-    if max_width:
-        w = sketch.bounding_box().size.X
-        if w > max_width:
-            sketch = build(max_width / w)
+    bb = sketch.bounding_box()
+    factors = [1.0]
+    if max_width and bb.size.X > max_width:
+        factors.append(max_width / bb.size.X)
+    if max_height and bb.size.Y > max_height:
+        factors.append(max_height / bb.size.Y)
+    if min(factors) < 1.0:
+        sketch = build(min(factors))
 
     bb = sketch.bounding_box()
     sketch = Pos(-bb.center().X, -bb.center().Y, 0) * sketch

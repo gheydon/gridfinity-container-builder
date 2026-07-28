@@ -205,7 +205,7 @@ def _pred_shelf_body(shell, cell, params, scoop_r, test,
     """
     from build123d import Box
 
-    from .text import solid_label
+    from .text import solid_label, solid_label_sized
 
     H = params["height"]
 
@@ -257,15 +257,34 @@ def _pred_shelf_body(shell, cell, params, scoop_r, test,
             text = str(raw)
             if cfg["showCounts"] and bin_spec.get("count") is not None:
                 text += f" ({bin_spec['count']})"
-            solid = solid_label(
-                text,
-                cap_height=cfg["capHeight"],
-                depth=LABEL_RAISE + LABEL_SINK,
-                line_spacing=cfg["lineSpacing"],
-                max_width=pocket_w - 4 - text_reserve,
-                font=cfg["font"],
-                bold=cfg["bold"],
-            )
+            lines = text.split("\n")
+            tw = pocket_w - 4 - text_reserve
+            th = POCKET_DEPTH_Y - 2.0
+            if len(lines) > 1:
+                # first row full size, later rows scaled (subScale, ~0.65)
+                heights = cfg.get("capHeights")
+                if not heights:
+                    sub = cfg.get("subScale", 0.65)
+                    heights = [cfg["capHeight"] * (1.0 if i == 0 else sub)
+                               for i in range(len(lines))]
+                sized = list(zip(lines, [float(h) for h in heights]))
+                solid = solid_label_sized(
+                    sized,
+                    depth=LABEL_RAISE + LABEL_SINK,
+                    line_gap=cfg.get("lineGap", 1.6),
+                    max_width=tw, max_height=th,
+                    font=cfg["font"], bold=cfg["bold"],
+                )
+            else:
+                solid = solid_label(
+                    text,
+                    cap_height=cfg["capHeight"],
+                    depth=LABEL_RAISE + LABEL_SINK,
+                    line_spacing=cfg["lineSpacing"],
+                    max_width=tw,
+                    font=cfg["font"],
+                    bold=cfg["bold"],
+                )
             label = Pos(width / 2 + text_reserve / 2, pocket_cy, z_face) * solid
         if icon_part is not None:
             label = icon_part if label is None else label + icon_part
