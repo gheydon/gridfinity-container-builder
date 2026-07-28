@@ -1,0 +1,25 @@
+# Generated from ../screw-organiser/layouts/voron-v02.yaml by gridfinity-config-builder — edit freely.
+name: voron-v02
+heightUnits: 6
+colors: {body: '#ED3023', labels: '#1A1A1A'}
+containers:
+  - {label: M3n, size: 2x1, count: 140}
+  - {label: M2n, size: 1x1, count: 60}
+  - {label: M3 heatset, size: 2x1, count: 50}
+  - {label: M2x6 FHCS, size: 1x1, count: 10, test: M2x6, head: flush}
+  - {label: M2x6, size: 1x1, count: 60, test: true}
+  - {label: M2x8, size: 1x1, count: 10, test: true}
+  - {label: M2x10sT, size: 1x1, count: 30, test: M2x10}
+  - {label: M3x6, size: 1x1, count: 40, test: true, head: button}
+  - {label: M3x10, size: 2x1, count: 50, test: true, head: button}
+  - {label: M3x8, size: 2x1, count: 120, test: true, head: button}
+  - {label: M3x12, size: 2x1, count: 25, test: true, head: button}
+  - {label: M3x16, size: 1x1, count: 10, test: true, head: button}
+  - {label: Clips, size: 1x1}
+  - {label: M3x25, size: 2x1, count: 10, test: true, head: button}
+  - {label: M3x30, size: 2x1, count: 10, test: true, head: button}
+  - {label: M3x35, size: 2x1, count: 10, test: true, head: button}
+  - {label: M3x40, size: 2x1, count: 10, test: true, head: button}
+  - {label: Shim 6x3, size: 2x1, count: 50}
+  - {label: F623, size: 1x1, count: 24}
+  - {size: 1x1}

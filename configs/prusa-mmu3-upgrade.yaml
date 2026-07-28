@@ -1,0 +1,39 @@
+# Generated from ../screw-organiser/layouts/prusa-mmu3-upgrade.yaml by gridfinity-config-builder — edit freely.
+name: prusa-mmu3-upgrade
+heightUnits: 6
+labels: { capHeight: 4.2 }  # bigger label text (default 3.2)
+containers:
+  - {label: M3n, size: 1x1, count: 21}
+  - {label: M3nS, size: 1x1, count: 24}
+  - {label: M4x5g, size: 1x1, count: 2, test: {dia: 4.4, length: 5, head: none}}
+  - {label: M2x8, size: 1x1, count: 1, test: true}
+  - {label: M3 wshr, size: 1x1, count: 1}
+  - {label: Trapeze, size: 1x1, count: 1}
+  - {label: M3x6, size: 1x1, count: 28, test: true}
+  - {label: M3x10, size: 1x2, count: 35, test: true}
+  - {label: 'Fan
+
+    M3x14/16b', size: 1x1, count: 3, test: M3x16}
+  - {label: M3x18, size: 1x1, count: 3, test: true}
+  - {label: 'Fan
+
+    M3x20/22b', size: 1x1, count: 1, test: M3x22}
+  - {label: M3x30, size: 2x1, count: 9, test: true}
+  - {label: M3x40, size: 2x1, count: 2, test: true}
+  - {size: 1x1}
+  - {label: 625 brg, size: 1x1, count: 9}
+  - {label: 693 brg, size: 1x1, count: 5}
+  - {label: 2.9x8.5, size: 1x1, count: 5, test: {dia: 3.3, length: 8.5, head: none}}
+  - {label: 5x16sh, size: 1x1, count: 8, test: {dia: 5.4, length: 16, head: none}}
+  - {label: PTFE 19, size: 1x1, count: 5, test: {dia: 4.4, length: 19, head: none}}
+  - {label: 5x120sh shaft, size: 4x1, count: 2, test: {dia: 5.4, length: 120, head: none}}
+  - {label: M5-4 fit, size: 1x1, count: 2}
+  - {label: 'Magnet
+
+    + Ball', size: 1x1}
+  - {label: Bushing, size: 1x1, count: 2}
+  - {label: Coupler, size: 1x1, count: 1}
+  - {label: Stopper, size: 1x1, count: 1}
+  - {label: Spring 15x5, size: 1x1, count: 2, test: {dia: 5.4, length: 15, head: none}}
+  - {label: Collet, size: 1x1, count: 15}
+  - {type: open, size: 1x2}   # razor blade in its SD-card-sized case (+ any magnets); no label

@@ -1,0 +1,32 @@
+# Generated from ../screw-organiser/layouts/prusa-mk3-family.yaml by gridfinity-config-builder — edit freely.
+name: prusa-mk3-family
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M3nS, size: 2x1, count: 49}
+  - {label: M3n, size: 2x1, count: 30}
+  - {label: M3nN, size: 1x1, count: 12}
+  - {label: M3nE, size: 1x1, count: 7}
+  - {label: M3x4bT, size: 1x1, count: 9, test: M3x4}
+  - {label: M3x6, size: 2x1, count: 25, test: true}
+  - {label: M3x6r, size: 1x1, count: 9, test: M3x6}
+  - {label: M3x8, size: 1x1, count: 10, test: true}
+  - {label: M3x12, size: 1x1, count: 15, test: true}
+  - {label: M3x14, size: 1x1, count: 5, test: true}
+  - {label: M3x16, size: 1x1, count: 7, test: true}
+  - {label: M3x18, size: 1x1, count: 15, test: true}
+  - {label: M3x20, size: 1x1, count: 3, test: true}
+  - {label: M3x25, size: 2x1, count: 4, test: true}
+  - {label: M3x30, size: 2x1, count: 9, test: true}
+  - {label: M3x40, size: 2x1, count: 7, test: true}
+  - {label: M3x10, size: 2x1, count: 100, test: true}
+  - {label: M5x16r, size: 2x1, count: 64, test: M5x16}
+  - {label: 6-32, size: 1x1, count: 4, test: 3.9}
+  - {label: LM8UU, size: 1x1, count: 10}
+  - {label: LM10LUU, size: 2x1, count: 2}
+  - {label: Small brgs, size: 1x1, count: 5}
+  - {label: GT2-16, size: 1x1, count: 2}
+  - {label: Clips, size: 1x1, count: 9}
+  - {label: Cable clips, size: 1x1, count: 7}
+  - {label: Spacers, size: 1x1, count: 13}
+  - {size: 1x1}

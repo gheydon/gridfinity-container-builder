@@ -1,0 +1,11 @@
+# Extra containers from the Core One build.
+name: core-one-extras
+heightUnits: 6
+labels: { capHeight: 4.8 }   # bigger label text
+containers:
+  - { label: M3x6, size: 1x1, count: 33, test: true }
+  - { label: M3nN, size: 1x1, test: false }   # M3 Nylock (nyloc) nut, DIN 985: no gauge
+  - { label: M3x12, size: 1x1 }   # socket head cap screw (SHCS); gauge uses a cap-head pocket
+  - { label: M3x14, size: 1x1 }
+  - { label: M3x20, size: 1x1 }
+  - { label: M4N, size: 1x1, test: false }   # M4 nut: no gauge

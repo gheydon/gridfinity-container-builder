@@ -1,0 +1,29 @@
+[project]
+name = "gridfinity-container-builder"
+version = "0.1.0"
+description = "Labelled Gridfinity containers and Pred-style printable labels from screw-organiser layouts (build123d). A remix of Pred's Gridfinity Bin with Printable Label."
+authors = [
+    { name = "Gordon Heydon", email = "gordon@heydon.com.au" }
+]
+requires-python = ">=3.13"
+license = "CC-BY-NC-4.0"
+license-files = ["LICENSE"]
+dependencies = [
+    # gridfinity-build123d's current revision needs pre-0.11 build123d APIs
+    "build123d>=0.10.0,<0.11",
+    "gridfinity-build123d",
+    "pyyaml>=6.0.3",
+    "webcolors>=24.8.0",
+]
+
+[project.scripts]
+gridfinity-container-builder = "gridfinity_container_builder.cli:main"
+gridfinity-config-builder = "gridfinity_container_builder.config_builder:main"
+gridfinity-filaments = "gridfinity_container_builder.filaments_cli:main"
+
+[build-system]
+requires = ["uv_build>=0.10.7,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+gridfinity-build123d = { git = "https://github.com/Ruudjhuu/gridfinity_build123d", rev = "fc29ac6b9ad5b110c582abef78bf0f1153bec6b3" }

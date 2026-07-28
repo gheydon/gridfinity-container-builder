@@ -1,0 +1,10 @@
+# Button- and flush-head screws (distinct from the cap-head boxes).
+# head: button -> BHCS pocket, head: flush -> countersunk seat in the gauge.
+name: head-variants
+heightUnits: 6
+labels: { capHeight: 4.8 }
+containers:
+  - { label: "M4x16\nBHCS", head: button }   # button head
+  - { label: "M3x10\nBHCS", head: button }   # button head
+  - { label: "M3x10\nFHCS", head: flush }    # flush / countersunk
+  - { label: "M2x4\nflat PH", head: pan }    # flat pan head, Phillips drive

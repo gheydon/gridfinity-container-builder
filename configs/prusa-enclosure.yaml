@@ -1,0 +1,26 @@
+# Generated from ../screw-organiser/layouts/prusa-enclosure.yaml by gridfinity-config-builder — edit freely.
+name: prusa-enclosure
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M3n, size: 2x1, count: 111}
+  - {label: M3nS, size: 2x1, count: 43}
+  - {label: M3nN, size: 1x1, count: 16}
+  - {label: Thumb, size: 1x1, count: 12}
+  - {label: M3x4, size: 2x1, count: 32, test: true}
+  - {label: M3x6, size: 1x1, count: 8, test: true}
+  - {label: M3x8, size: 2x1, count: 141, test: true}
+  - {label: M3x10, size: 1x1, count: 20, test: true}
+  - {label: M3x10r, size: 1x1, count: 2, test: M3x10}
+  - {label: M3x12, size: 2x1, count: 93, test: true}
+  - {label: M3x18, size: 1x1, count: 12, test: true}
+  - {label: M3x20, size: 1x1, count: 9, test: true}
+  - {label: Washers, size: 1x1, count: 10}
+  - {label: M4x5r, size: 2x1, count: 53, test: M4x5}
+  - {label: M4x10r, size: 1x1, count: 8, test: M4x10}
+  - {label: M4x16b, size: 1x1, count: 4, test: M4x16}
+  - {label: QSM-M5, size: 1x1, count: 4}
+  - {size: 1x1}
+  - {label: Nylon rivets, size: 2x1, count: 65}
+  - {label: Mag 20x6x2, size: 2x1, count: 41}
+  - {label: Spring 4x25, size: 2x1, count: 2, test: {dia: 4.4, length: 25, head: none}}

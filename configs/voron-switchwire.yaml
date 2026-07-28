@@ -1,0 +1,29 @@
+# Generated from ../screw-organiser/layouts/voron-switchwire.yaml by gridfinity-config-builder — edit freely.
+name: voron-switchwire
+heightUnits: 6
+colors: {body: '#ED3023', labels: '#1A1A1A'}
+containers:
+  - {label: M3 heatset, size: 2x1, count: 54}
+  - {label: M3 T-nut, size: 2x1, count: 25}
+  - {label: M2x10sT, size: 1x1, count: 8, test: M2x10}
+  - {label: M3x6 BHCS, size: 1x1, count: 6, test: M3x6, head: button}
+  - {label: M3x6 FHCS, size: 1x1, count: 16, test: M3x6, head: flush}
+  - {label: M3x12, size: 1x1, count: 12, test: true}
+  - {label: M3x12 FHCS, size: 1x1, count: 9, test: M3x12, head: flush}
+  - {label: M3x16, size: 1x1, count: 12, test: true}
+  - {label: M3x20, size: 1x1, count: 3, test: true}
+  - {label: M4x8, size: 1x1, count: 4, test: true, head: button}
+  - {label: M3x8, size: 2x1, count: 66, test: true}
+  - {label: M3x25, size: 2x1, count: 2, test: true}
+  - {label: M3x30, size: 2x1, count: 28, test: true}
+  - {label: M3x40, size: 2x1, count: 7, test: true}
+  - {label: M5x10, size: 2x1, count: 50, test: M5x10, head: button}
+  - {label: M5x16, size: 2x1, count: 12, test: M5x16, head: button}
+  - {label: M5x30, size: 2x1, count: 5, test: M5x30, head: button}
+  - {label: M5x40, size: 2x1, count: 6, test: M5x40}
+  - {label: M8x16, size: 1x1, count: 8, test: M8x16, head: button}
+  - {label: Shim 5x10, size: 1x1, count: 19}
+  - {label: M5 T-nut, size: 2x1, count: 64}
+  - {label: F695, size: 2x1, count: 20}
+  - {label: Pulleys, size: 1x1, count: 3}
+  - {size: 1x1}

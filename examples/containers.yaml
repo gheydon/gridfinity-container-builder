@@ -1,0 +1,46 @@
+# A container manifest: the list of containers to build, plus build
+# settings. Containers auto-size so their item fits lying flat (M3x40
+# needs 2 units of width); give `size: 2x1` to override. Screw labels
+# (M...) get a test gauge on the ramp crest automatically — tune the head
+# with `head: button|flush|none`, or switch it off with `test: false`.
+# Settings use the same names as screw-organiser layouts where an
+# equivalent exists: labels, testHoles, colors, gridfinity.
+name: my-containers
+heightUnits: 6        # 42 mm — the height the Pred storage box lid locks onto
+gridfinity: { magnets: false }
+labels: { style: direct, showCounts: false, capHeight: 3.2, font: Arial }  # or: plates, embossed
+testHoles: { clearance: 0.4, rim: 1.2 }
+
+# leave selected containers out of the build (labels or slugs, globs ok)
+# exclude: [misc, "m3n*"]
+
+# resize/adjust any container, wherever it came from (labels or slugs as
+# keys) — handy when a 1x1 won't hold your stock of a screw
+overrides:
+  M3x10: 2x2
+  # M3x8: { size: 2x1, count: 100 }
+
+# plate settings used by --plates (CLI flags override)
+plate:
+  width: 250
+  depth: 210
+  spacing: 4
+  tower: purge          # purge (60x60) | prime (35x35) | none
+  # purgeTower: { width: 60, depth: 60 }  # legacy boolean/size form still works
+  platesPerFile: 9      # beds per 3MF (9 = PrusaSlicer 2.9's maximum)
+
+# pull whole screw-organiser layouts in alongside the hand-picked list
+# layouts:
+#   - ../../screw-organiser/layouts/prusa-mmu3-upgrade.yaml
+
+containers:
+  - { label: M3x10 }                       # resized to 2x2 by the override
+  - { label: M3x8, count: 40 }             # 1x1, gauge with cap head
+  - { label: M3x12 BHCS }                  # button head inferred from label
+  - { label: M3x6 FHCS, head: flush }      # countersunk seat
+  - { label: M3x40 }                       # auto-sizes to 2x1
+  - { label: M4x10g, test: { dia: 4.4, length: 10, head: none } }
+  - { label: 5x120 shaft, test: { dia: 5.4, length: 120, head: none } }  # 4x1
+  - { label: M3n, test: false }            # nuts: no gauge
+  - { label: "625\nbearings", size: 2x1 }  # explicit size, two-line label
+  - { type: open, size: 1x1 }              # plain unlabelled bin

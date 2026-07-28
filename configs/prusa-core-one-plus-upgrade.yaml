@@ -1,0 +1,21 @@
+# Generated from ../screw-organiser/layouts/prusa-core-one-plus-upgrade.yaml by gridfinity-config-builder — edit freely.
+name: prusa-core-one-plus-upgrade
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M2x8, size: 1x1, count: 1, test: true}
+  - {label: M3x6, size: 1x1, count: 2, test: true}
+  - {label: M3x8, size: 1x1, count: 2, test: true}
+  - {label: M3x8rT, size: 1x1, count: 4, test: true}
+  - {label: M3x10, size: 1x1, count: 3, test: true}
+  - {label: M3x10rT, size: 1x1, count: 5, test: M3x10}
+  - {label: M3x12rT, size: 1x1, count: 2, test: M3x12}
+  - {label: M3nN, size: 1x1, count: 3}
+  - {label: M3 wshr, size: 1x1, count: 1}
+  - {label: 'Magnet
+
+    + Ball', size: 1x1}
+  - {label: O-ring 25x3.5, size: 2x1, count: 1}
+  - {label: Collet, size: 1x1, count: 1}
+  - {label: Rivets, size: 1x1}
+  - {size: 1x1}

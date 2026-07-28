@@ -1,0 +1,8 @@
+out/
+filaments.yaml
+.venv/
+__pycache__/
+*.egg-info/
+.DS_Store
+.env
+slicer-config.ini

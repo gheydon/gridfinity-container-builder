@@ -1,0 +1,31 @@
+# Generated from ../screw-organiser/layouts/voron-trident.yaml by gridfinity-config-builder — edit freely.
+name: voron-trident
+heightUnits: 6
+colors: {body: '#ED3023', labels: '#1A1A1A'}
+containers:
+  - {label: M3 heatset, size: 2x1, count: 109}
+  - {label: M3 roll-in T, size: 2x1, count: 86}
+  - {label: M3 hammer, size: 2x1, count: 55}
+  - {label: M5 heatset, size: 1x1, count: 15}
+  - {label: M2x10sT, size: 1x1, count: 17, test: M2x10}
+  - {label: M3x6 FHCS, size: 1x1, count: 17, test: M3x6, head: flush}
+  - {label: M3x6 BHCS, size: 2x1, count: 59, test: M3x6, head: button}
+  - {label: M3x12, size: 2x1, count: 73, test: true}
+  - {label: M3x20, size: 1x1, count: 3, test: true}
+  - {label: M3x16, size: 2x1, count: 27, test: true}
+  - {label: M3x30, size: 2x1, count: 13, test: true}
+  - {label: M3x8, size: 3x1, count: 140, test: true}
+  - {label: M3x40, size: 2x1, count: 9, test: true}
+  - {label: M5x10, size: 2x1, count: 45, test: M5x10, head: button}
+  - {label: M5x16, size: 2x1, count: 58, test: M5x16, head: button}
+  - {label: M4x6, size: 1x1, count: 7, test: true, head: button}
+  - {label: M5x30, size: 2x1, count: 4, test: M5x30, head: button}
+  - {label: M5x40, size: 2x1, count: 4, test: M5x40, head: button}
+  - {label: M5 T-nut, size: 2x1, count: 69}
+  - {label: M5 shim, size: 1x1, count: 24}
+  - {label: F695, size: 2x1, count: 24}
+  - {label: GE5C, size: 1x1, count: 3}
+  - {label: Pulleys, size: 1x1, count: 5}
+  - {label: M3 lock/wshr, size: 1x1, count: 10}
+  - {label: Spare, size: 1x1}
+  - {size: 1x1}

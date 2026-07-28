@@ -1,0 +1,6 @@
+# The three bins to print together on one plate.
+name: spares
+containers:
+  - { label: M3x40, size: 2x1, test: true }
+  - { label: M2x8,  size: 1x1, test: true }
+  - { type: open,   size: 1x2 }

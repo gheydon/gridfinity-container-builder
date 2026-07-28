@@ -1,0 +1,11 @@
+# Pred storage-box front labels (the big slide-in label). Each entry:
+#   text   the text on the label (\n for two lines)
+#   width  box width in bins: 4, 5, 6 or 7 units (default 5)
+# The plate prints in the bin colour, the text in the label colour, with
+# the text running from 0.2 mm above the bed to 0.2 mm above the label.
+name: box-labels
+boxLabels:
+  - { text: MMU3 Upgrade, width: 5 }
+  - { text: "Core One\nHardware", width: 5 }
+  - { text: "Prusa Printers\nSpare parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa Printers\nNuts and Bolts", width: 5, capHeight: 8, subScale: 0.7 }

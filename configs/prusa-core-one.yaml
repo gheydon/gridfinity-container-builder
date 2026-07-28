@@ -1,0 +1,33 @@
+# Generated from ../screw-organiser/layouts/prusa-core-one.yaml by gridfinity-config-builder — edit freely.
+name: prusa-core-one
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M3n, size: 1x1}
+  - {label: M3nS, size: 1x1}
+  - {label: M3nN, size: 1x1}
+  - {label: 3x8sT, size: 1x1, test: true}
+  - {label: Nylon Rivet, size: 2x1}
+  - {label: M3x20rT, size: 1x1, test: true}
+  - {label: M3x4bT, size: 1x1, test: true}
+  - {label: 'M3x12cT
+
+    M3x12bT', size: 1x1, test: true}
+  - {label: M4x6r, size: 1x1, test: true}
+  - {label: 6-32(P), size: 1x1, test: 3.9}
+  - {label: 2.9x6.5, size: 1x1, test: true}
+  - {label: M3x4rT, size: 2x1, test: true}
+  - {label: M3x5rT, size: 1x1, test: true}
+  - {label: M3x8rT, size: 2x1, test: true}
+  - {label: M3x10rT, size: 1x1, test: true}
+  - {label: M3x30, size: 2x1, test: true}
+  - {label: M3x35, size: 2x1, test: true}
+  - {label: M2x8, size: 1x1, test: true}
+  - {label: M2.5x10, size: 1x1, test: true}
+  - {label: M3x12, size: 1x1, test: true}
+  - {label: M3x18, size: 3x1, test: true}
+  - {label: M3x25, size: 2x1, test: true}
+  - {label: M3x4, size: 1x1, test: true}
+  - {label: M3x6, size: 2x1, test: true}
+  - {label: M3x8, size: 1x1, test: true}
+  - {label: M3x10, size: 2x1, test: true}

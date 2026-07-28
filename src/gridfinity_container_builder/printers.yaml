@@ -1,0 +1,74 @@
+# Common printers: usable build-plate size and the waste-tower type their
+# multi-material system needs on the plate:
+#   purge - wipe/purge tower on the plate (Prusa MMU3 and similar)
+#   prime - small prime tower (toolchangers that just prime the nozzle)
+#   none  - nothing on the plate (single material, Bambu AMS waste chute,
+#           the Prusa INDX toolchanger swaps whole toolheads)
+# `towerPosition: { x, y }` records where the slicer parks the waste
+# tower by default (PrusaSlicer: 180, 140) — without an embedded slicer
+# config the reservation is anchored there so parts and tower never
+# collide; with a config the tower is placed into the reserved corner.
+# Dual-nozzle printers whose toolheads cannot both reach the full bed
+# add `dualPlate: { width, depth }` — the area reachable by BOTH
+# nozzles. Two-colour builds (bin + label) pack within it automatically.
+#
+# Select a printer with `printer: <name>` in a manifest, --printer on the
+# CLI, or PRINTER in the environment/.env; explicit plate/tower settings
+# always override the preset. Add or override printers (and attach your
+# exported PrusaSlicer config via `slicerConfig: path.ini`) in
+# ~/.config/gridfinity-container-builder/printers.yaml, or edit this file
+# (it is the same file as printers.yaml in the project root).
+printers:
+  # Prusa
+  prusa-mini:          { plate: { width: 180, depth: 180 }, tower: none }
+  prusa-mk3s:          { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU2S/MMU3
+  prusa-mk3-5:         { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
+  prusa-mk4:           { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
+  prusa-mk4s:          { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
+  prusa-core-one:      { plate: { width: 250, depth: 220 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
+  prusa-core-one-indx: { plate: { width: 250, depth: 220 }, tower: none }    # INDX toolchanger
+  prusa-core-one-l:    { plate: { width: 300, depth: 300 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
+  prusa-xl:            { plate: { width: 360, depth: 360 }, tower: prime }   # toolchanger
+
+  # Bambu Lab (AMS purges to the waste chute)
+  bambu-a1-mini:       { plate: { width: 180, depth: 180 }, tower: none }
+  bambu-a1:            { plate: { width: 256, depth: 256 }, tower: none }
+  bambu-p1p:           { plate: { width: 256, depth: 256 }, tower: none }
+  bambu-p1s:           { plate: { width: 256, depth: 256 }, tower: none }
+  bambu-x1c:           { plate: { width: 256, depth: 256 }, tower: none }
+  bambu-x1e:           { plate: { width: 256, depth: 256 }, tower: none }
+  bambu-h2d:           # dual nozzle; both heads reach only 300 of the 350 mm width
+    plate: { width: 350, depth: 320 }
+    dualPlate: { width: 300, depth: 320 }
+    tower: none
+
+  # Voron (single toolhead; add tower: purge yourself for ERCF/Tradrack)
+  voron-0:             { plate: { width: 120, depth: 120 }, tower: none }
+  voron-trident-250:   { plate: { width: 250, depth: 250 }, tower: none }
+  voron-trident-300:   { plate: { width: 300, depth: 300 }, tower: none }
+  voron-24-300:        { plate: { width: 300, depth: 300 }, tower: none }
+  voron-24-350:        { plate: { width: 350, depth: 350 }, tower: none }
+  voron-switchwire:    { plate: { width: 250, depth: 210 }, tower: none }
+
+  # Creality
+  ender-3:             { plate: { width: 220, depth: 220 }, tower: none }
+  ender-3-v3:          { plate: { width: 220, depth: 220 }, tower: none }
+  creality-k1:         { plate: { width: 220, depth: 220 }, tower: none }
+  creality-k1-max:     { plate: { width: 300, depth: 300 }, tower: none }
+  creality-k2-plus:    { plate: { width: 350, depth: 350 }, tower: none }    # CFS
+
+  # Others
+  elegoo-neptune-4:    { plate: { width: 225, depth: 225 }, tower: none }
+  elegoo-neptune-4-max: { plate: { width: 420, depth: 420 }, tower: none }
+  sovol-sv06:          { plate: { width: 220, depth: 220 }, tower: none }
+  sovol-sv08:          { plate: { width: 350, depth: 350 }, tower: none }
+  qidi-x-plus-3:       { plate: { width: 280, depth: 280 }, tower: none }
+  qidi-x-max-3:        { plate: { width: 325, depth: 325 }, tower: none }
+  flashforge-ad5m:     { plate: { width: 220, depth: 220 }, tower: none }
+  ratrig-vcore3-300:   { plate: { width: 300, depth: 300 }, tower: none }
+  ratrig-vcore3-400:   { plate: { width: 400, depth: 400 }, tower: none }
+
+# default reservation footprint per tower type (rear-right corner)
+towerSizes:
+  purge: { width: 60, depth: 60 }
+  prime: { width: 35, depth: 35 }

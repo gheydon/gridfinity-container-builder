@@ -1,0 +1,25 @@
+# Generated from ../screw-organiser/layouts/prusa-mk2-family.yaml by gridfinity-config-builder — edit freely.
+name: prusa-mk2-family
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M8n, size: 1x1, count: 22}
+  - {label: M8w, size: 1x1, count: 22}
+  - {label: M10n, size: 1x1, count: 14}
+  - {label: M10w, size: 1x1, count: 12}
+  - {label: M3n, size: 1x1, count: 13}
+  - {label: M3nS, size: 1x1, count: 8}
+  - {label: M2x12, size: 1x1, count: 4, test: true}
+  - {label: M3x8r, size: 1x1, count: 5, test: M3x8}
+  - {label: M3x10, size: 2x1, count: 31, test: true}
+  - {label: M3x12, size: 1x1, count: 6, test: true}
+  - {label: M3x18, size: 1x1, count: 12, test: true}
+  - {label: M3x20, size: 1x1, count: 3, test: true}
+  - {label: M3x25, size: 2x1, count: 2, test: true}
+  - {label: M3x30, size: 2x1, count: 3, test: true}
+  - {label: M4x10, size: 1x1, count: 2, test: true}
+  - {label: M3x40, size: 2x1, count: 6, test: true}
+  - {label: M3w, size: 1x1, count: 16}
+  - {label: Springs, size: 1x1, count: 2}
+  - {label: Bearings, size: 1x1, count: 2}
+  - {size: 1x1}

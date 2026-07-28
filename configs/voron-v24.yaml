@@ -1,0 +1,35 @@
+# Generated from ../screw-organiser/layouts/voron-v24.yaml by gridfinity-config-builder — edit freely.
+name: voron-v24
+heightUnits: 6
+colors: {body: '#ED3023', labels: '#1A1A1A'}
+containers:
+  - {label: M3 heatset, size: 2x1, count: 90}
+  - {label: M3 T-nut, size: 2x1, count: 120}
+  - {label: M3 hammer, size: 1x1, count: 47}
+  - {label: M3n, size: 1x1, count: 7}
+  - {size: 1x1}
+  - {label: M2x10sT, size: 1x1, count: 15, test: M2x10}
+  - {label: M3x6 FHCS, size: 1x1, count: 10, test: M3x6, head: flush}
+  - {label: M3x6 BHCS, size: 1x1, count: 12, test: M3x6, head: button}
+  - {label: M3x12, size: 1x1, count: 23, test: true}
+  - {label: M3x16, size: 1x1, count: 20, test: true}
+  - {label: M3x20, size: 1x1, count: 29, test: true}
+  - {label: M4x6, size: 1x1, count: 7, test: true, head: button}
+  - {label: M3x30, size: 2x1, count: 32, test: true}
+  - {label: M3x40, size: 2x1, count: 28, test: true}
+  - {label: M3x8, size: 3x1, count: 217, test: true}
+  - {label: M5x10, size: 2x1, count: 40, test: M5x10, head: button}
+  - {label: M5x16, size: 2x1, count: 31, test: M5x16, head: button}
+  - {label: M5x30, size: 2x1, count: 22, test: M5x30, head: button}
+  - {label: M5 hex, size: 1x1, count: 26}
+  - {label: M5x40, size: 2x1, count: 25, test: M5x40}
+  - {label: Shafts 5x60/30, size: 3x1, count: 5, test: {dia: 5.4, length: 60, head: none}}
+  - {label: Shim 5x10, size: 1x1, count: 42}
+  - {label: F695, size: 1x1, count: 20}
+  - {label: M5 T-nut, size: 1x1, count: 61}
+  - {label: 625 brg, size: 1x1, count: 12}
+  - {label: Pulleys, size: 1x1, count: 11}
+  - {label: Idlers, size: 1x1, count: 6}
+  - {label: 80T, size: 1x1, count: 4}
+  - {label: Loops 188, size: 1x1, count: 4}
+  - {label: Spare, size: 1x1}

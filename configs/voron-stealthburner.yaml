@@ -1,0 +1,17 @@
+# Generated from ../screw-organiser/layouts/voron-stealthburner.yaml by gridfinity-config-builder — edit freely.
+name: voron-stealthburner
+heightUnits: 6
+colors: {body: '#ED3023', labels: '#1A1A1A'}
+containers:
+  - {label: M3 heatset, size: 1x1, count: 21}
+  - {label: M3x6, size: 1x1, count: 4, test: true}
+  - {label: M3x8, size: 1x1, count: 2, test: true}
+  - {label: M3x10, size: 1x1, count: 2, test: true}
+  - {label: M3x12, size: 1x1, count: 4, test: true}
+  - {label: M3x16, size: 1x1, count: 2, test: true}
+  - {label: M3x20, size: 1x1, count: 1, test: true}
+  - {label: M3x25, size: 2x1, count: 6, test: true}
+  - {label: M2x10sT, size: 1x1, count: 2, test: M2x10}
+  - {label: M3x30, size: 2x1, count: 1, test: true}
+  - {label: M3x50, size: 2x1, count: 2, test: true}
+  - {size: 1x1}

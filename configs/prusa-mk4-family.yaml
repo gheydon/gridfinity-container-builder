@@ -1,0 +1,35 @@
+# Generated from ../screw-organiser/layouts/prusa-mk4-family.yaml by gridfinity-config-builder — edit freely.
+name: prusa-mk4-family
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M3nS, size: 1x1, count: 38}
+  - {label: M3n, size: 1x1, count: 14}
+  - {label: M3nN/nEs, size: 1x1, count: 9}
+  - {label: Trapez, size: 1x1, count: 2}
+  - {label: Spacers, size: 1x1}
+  - {size: 1x1}
+  - {label: M3x4bT, size: 1x1, count: 8, test: true}
+  - {label: M3x5rT, size: 1x1, count: 10, test: true}
+  - {label: M3x6, size: 1x1, count: 16, test: true}
+  - {label: M3x6r, size: 1x1, count: 8, test: M3x6}
+  - {label: 3x8sT, size: 1x1, count: 6, test: true}
+  - {label: M3x8, size: 1x1, count: 6, test: true}
+  - {label: M3x10, size: 2x1, count: 69, test: true}
+  - {label: M5x16r, size: 2x1, count: 32, test: M5x16}
+  - {label: M3x12, size: 1x1, count: 9, test: true}
+  - {label: 3x12sT, size: 1x1, count: 4, test: true}
+  - {label: M3x16, size: 1x1, count: 4, test: true}
+  - {label: M3x18, size: 1x1, count: 15, test: true}
+  - {label: M3x20rT, size: 1x1, count: 2, test: M3x20}
+  - {label: M4x10r, size: 1x1, count: 2, test: M4x10}
+  - {label: M3x25, size: 2x1, count: 6, test: true}
+  - {label: M3x30, size: 2x1, count: 9, test: true}
+  - {label: M3x40, size: 2x1, count: 2, test: true}
+  - {label: Spring 15x5, size: 1x1, count: 4, test: {dia: 5.4, length: 15, head: none}}
+  - {label: 693 brg, size: 1x1, count: 2}
+  - {label: LM10LUU, size: 2x1, count: 2}
+  - {label: LM8UU, size: 1x1, count: 6}
+  - {label: Clips, size: 1x1, count: 6}
+  - {label: Cable clips, size: 1x1, count: 6}
+  - {label: Brg pads, size: 1x1, count: 6}

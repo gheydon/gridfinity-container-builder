@@ -1,0 +1,32 @@
+# Generated from ../screw-organiser/layouts/prusa-core-one-family.yaml by gridfinity-config-builder — edit freely.
+name: prusa-core-one-family
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M3nS, size: 1x1, count: 23}
+  - {label: M3n, size: 1x1, count: 5}
+  - {label: M3nN, size: 1x1, count: 17}
+  - {label: Washers, size: 1x1, count: 6}
+  - {label: Spacers, size: 1x1}
+  - {size: 1x1}
+  - {label: M3x4/r, size: 1x1, count: 12, test: M3x4}
+  - {label: M3x4bT, size: 1x1, count: 8, test: M3x4}
+  - {label: M3x4rT, size: 2x1, count: 50, test: M3x4}
+  - {label: M3x5rT, size: 1x1, count: 10, test: M3x5}
+  - {label: M2x8, size: 1x1, count: 1, test: true}
+  - {label: M3x6, size: 2x1, count: 33, test: true}
+  - {label: M3x8, size: 1x1, count: 26, test: true}
+  - {label: M3x8rT, size: 2x1, count: 27, test: M3x8}
+  - {label: M3x10rT, size: 1x1, count: 10, test: M3x10}
+  - {label: M3x10, size: 2x1, count: 35, test: true}
+  - {label: M3x12, size: 1x1, count: 4, test: true}
+  - {label: M3x18, size: 1x1, count: 23, test: true}
+  - {label: M3x25, size: 2x1, count: 4, test: true}
+  - {label: M3x30, size: 2x1, count: 15, test: true}
+  - {label: M3x35, size: 2x1, count: 8, test: true}
+  - {label: 6-32, size: 1x1, count: 2, test: 3.9}
+  - {label: LM8UU, size: 1x1, count: 2}
+  - {label: Nylon rivets, size: 2x1, count: 50}
+  - {label: Idlers GT2-20, size: 1x1, count: 12}
+  - {label: Pulleys, size: 1x1, count: 4}
+  - {label: LM10LUU, size: 2x1, count: 2}

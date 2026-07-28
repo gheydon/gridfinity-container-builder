@@ -1,0 +1,32 @@
+# Generated from ../screw-organiser/layouts/prusa-mini-family.yaml by gridfinity-config-builder — edit freely.
+name: prusa-mini-family
+heightUnits: 6
+colors: {body: '#FA6831', labels: '#1A1A1A'}
+containers:
+  - {label: M3nS, size: 2x1, count: 31}
+  - {label: M3n, size: 2x1, count: 19}
+  - {label: M3nN/nE, size: 1x1, count: 16}
+  - {label: M2x8, size: 1x1, count: 1, test: true}
+  - {label: M3x4b, size: 1x1, count: 9, test: true}
+  - {label: M3x8, size: 2x1, count: 19, test: true}
+  - {label: M3x10r, size: 1x1, count: 6, test: M3x10}
+  - {label: M3x12, size: 2x1, count: 34, test: true}
+  - {label: M3x20, size: 2x1, count: 22, test: true}
+  - {label: M3x25, size: 2x1, count: 6, test: true}
+  - {label: M3x30, size: 2x1, count: 4, test: true}
+  - {label: M3x40, size: 2x1, count: 2, test: true}
+  - {label: M5x20r, size: 2x1, count: 10, test: M5x20}
+  - {label: M5x16r, size: 1x1, count: 2, test: M5x16}
+  - {label: Spring 5x15, size: 1x1, count: 1, test: {dia: 5.4, length: 15, head: none}}
+  - {label: LM10LUU, size: 2x1, count: 2}
+  - {label: LM8UU, size: 1x1, count: 5}
+  - {label: 608Z, size: 1x1, count: 4}
+  - {label: 623/625, size: 1x1, count: 5}
+  - {label: Clips, size: 1x1, count: 3}
+  - {label: Heatbed spacers, size: 2x1, count: 9}
+  - {label: Pulleys, size: 1x1, count: 2}
+  - {label: 'Magnet
+
+    + Ball', size: 1x1}
+  - {label: PTFE 15, size: 1x1, count: 1, test: {dia: 4.4, length: 15, head: none}}
+  - {size: 1x1}
