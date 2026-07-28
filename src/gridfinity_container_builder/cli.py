@@ -52,11 +52,13 @@ def _anchor() -> Container:
                      body=body, labels=[])
 
 
-def _compact_centered(placements, getter, plate_w, plate_d, spacing, reserve):
-    """Repack one bed's items into a compact square-ish block and centre
-    it on the plate, kept clear of the tower reserve zone — tight
-    grouping with minimal travel, and geometry-import centring becomes a
-    no-op."""
+def _compact_centered(placements, getter, plate_w, plate_d, spacing, reserve,
+                      left_margin=0.0):
+    """Repack one bed's items into a compact square-ish block, hug it
+    against the left edge (X home) and centre it front-to-back, kept clear
+    of the tower reserve zone. Left-justifying puts a layer shift into the
+    X endstop sooner so crash detection can recover; the tight grouping
+    keeps Y travel low, and geometry-import centring becomes a no-op."""
     items = [(p.item, *getter(p.item).size[:2]) for p in placements]
     area = sum(w * d for _, w, d in items)
     widest = max(w for _, w, d in items)
@@ -72,13 +74,13 @@ def _compact_centered(placements, getter, plate_w, plate_d, spacing, reserve):
     x1 = max(p.x + size(p)[0] for p in block)
     y0 = min(p.y for p in block)
     y1 = max(p.y + size(p)[1] for p in block)
-    dx = (plate_w - x0 - x1) / 2
+    # hug the left edge; centre front-to-back for minimal Y travel
+    dx = left_margin - x0
     dy = (plate_d - y0 - y1) / 2
     if reserve:
         rx, ry = reserve
         if x1 + dx > rx and y1 + dy > ry:
-            # nudge toward the front so the block clears the tower corner,
-            # staying horizontally centred
+            # nudge toward the front so the block clears the tower corner
             dy = ry - y1
     return [(getter(p.item), p.x + dx, p.y + dy) for p in block]
 
@@ -590,7 +592,8 @@ def main() -> None:
                     # and centre it ourselves (clearing the tower zone) —
                     # tight grouping, minimal travel, no anchor tabs.
                     placed = _compact_centered(group[0], getter, plate_w,
-                                               plate_d, spacing, reserve)
+                                               plate_d, spacing, reserve,
+                                               left_margin=edge_margin)
                 else:
                     placed = [
                         (getter(p.item), p.x + k * bed_pitch, p.y)
