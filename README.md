@@ -320,6 +320,9 @@ containers are sized to drop into the
 - The printable label-plate outline ([labelplate.py](src/gridfinity_container_builder/labelplate.py))
   is ported from [gflabel](https://github.com/ndevenish/gflabel)'s
   PredBase (BSD 3-Clause, © 2024 Nicholas Devenish).
+- Optional label icons (`--symbols`) are the SVG set from
+  [CNC Kitchen's Gridfinity Label Generator](https://github.com/CNCKitchen/gridfinityLabelGenerator)
+  (MIT), bundled under `icons/`.
 - Interior scoop / ramp / test-gauge geometry is ported from
   [screw-organiser](https://github.com/gheydon/screw-organiser).
 - Built on [gridfinity-build123d](https://github.com/Ruudjhuu/gridfinity_build123d)

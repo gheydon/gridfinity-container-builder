@@ -33,6 +33,11 @@ Attribution / third-party components
     https://github.com/ndevenish/gflabel   (BSD 3-Clause, (c) 2024 Nicholas
     Devenish). That portion remains under BSD 3-Clause.
 
+- The label icons in src/gridfinity_container_builder/icons/*.svg are from
+  CNC Kitchen's Gridfinity Label Generator
+    https://github.com/CNCKitchen/gridfinityLabelGenerator   (MIT, (c) CNC
+    Kitchen). See icons/LICENSE.md; those files remain under MIT.
+
 - The interior scoop/ramp/test-gauge geometry (interior.py, text.py) is
   ported from the author's own screw-organiser project
     https://github.com/gheydon/screw-organiser

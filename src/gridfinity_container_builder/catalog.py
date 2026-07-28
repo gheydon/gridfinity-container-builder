@@ -251,7 +251,7 @@ def build_catalog(paths: list[Path]) -> tuple[list[ContainerSpec], dict]:
             # an equivalent exists: labels, testHoles, colors, gridfinity
             for key in ("name", "plate", "printer", "heightUnits", "gridfinity",
                         "magnets", "counts", "colors", "labels", "testHoles",
-                        "labelStyle", "exclude", "filaments", "checkers"):
+                        "labelStyle", "exclude", "filaments", "checkers", "symbols"):
                 if key in doc and key not in settings:
                     settings[key] = doc[key]
             overrides.update(doc.get("overrides") or {})

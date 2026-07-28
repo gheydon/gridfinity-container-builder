@@ -34,6 +34,7 @@ jobs:
       - name: Build every profile (individual bins only — no plates)
         env:
           CHECKERS: "1"          # cut the screw test-gauges
+          SYMBOLS: "1"           # add auto-picked head-type icons to labels
         run: |
           set -e
           # not bin sets: box-labels are flat labels, spares-plate is a scratch plate

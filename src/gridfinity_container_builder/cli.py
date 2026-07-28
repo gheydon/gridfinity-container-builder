@@ -212,6 +212,10 @@ def main() -> None:
                          "or a .env file")
     ap.add_argument("--counts", action="store_true", default=None,
                     help='append each container\'s "count" to its label')
+    ap.add_argument("--symbols", action=argparse.BooleanOptionalAction, default=None,
+                    help="add a screw/nut/washer icon to the label, auto-picked from "
+                         "the head type (also SYMBOLS=1 in the environment or .env, or "
+                         "`symbols: true` / per-box `symbol:` in a manifest)")
     ap.add_argument("--bin-tool", type=int, default=None, metavar="N",
                     help="tool/extruder that prints the bins (default 1)")
     ap.add_argument("--label-tool", type=int, default=None, metavar="N",
@@ -325,6 +329,13 @@ def main() -> None:
         checkers = env_checkers
     else:
         checkers = bool(settings.get("checkers"))
+    env_symbols = _env_bool("SYMBOLS")
+    if args.symbols is not None:
+        symbols = args.symbols
+    elif env_symbols is not None:
+        symbols = env_symbols
+    else:
+        symbols = bool(settings.get("symbols"))
     labels_cfg = dict(settings.get("labels") or {})
     if args.counts or settings.get("counts"):
         labels_cfg["showCounts"] = True
@@ -400,6 +411,7 @@ def main() -> None:
                 label_style=label_style,
                 labels_cfg=labels_cfg,
                 test_cfg=test_cfg,
+                symbols=symbols,
             )
         return built[spec.slug]
 

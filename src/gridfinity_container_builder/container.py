@@ -96,6 +96,7 @@ def build_container(
     label_style: str = "direct",
     labels_cfg: dict | None = None,
     test_cfg: dict | None = None,
+    symbols: bool = False,
 ) -> Container:
     """label_style "direct" (default): Pred's label shelf with the text
     written straight onto the recessed label area; "plates" (alias
@@ -142,12 +143,23 @@ def build_container(
         scoop_r = spec.bin.get("scoopRadius", 3)
     test = test_spec(spec.bin, params) if labelled and checkers else None
 
+    symbol_kind = None
+    if labelled:
+        explicit = spec.bin.get("symbol")
+        if explicit not in (None, False) and str(explicit).lower() not in ("false", "none", "no"):
+            from .symbols import canonical
+            symbol_kind = canonical(explicit)
+        elif symbols:
+            from .symbols import symbol_for
+            gauge = test if test else test_spec(spec.bin, {**params, "test": params["test"]})
+            symbol_kind = symbol_for(spec.bin, gauge)
+
     label = None
     background = None
     if labelled and label_style in ("direct", "plates", "pred"):
         body, label, background = _pred_shelf_body(
             shell, cell, params, scoop_r, test, width, depth, total_h, lip_h,
-            spec.bin, direct=(label_style == "direct"))
+            spec.bin, direct=(label_style == "direct"), symbol=symbol_kind)
         body -= body_groove
         body -= base_hollows
         body = _fillet_bottom_pockets(body)
@@ -175,7 +187,7 @@ def build_container(
 
 
 def _pred_shelf_body(shell, cell, params, scoop_r, test,
-                     width, depth, total_h, lip_h, bin_spec, direct=True):
+                     width, depth, total_h, lip_h, bin_spec, direct=True, symbol=None):
     """Carve the interior with Pred's label shelf at the top back.
 
     Geometry measured from Pred's own bin (model 592545): the pocket floor
@@ -224,6 +236,21 @@ def _pred_shelf_body(shell, cell, params, scoop_r, test,
         background = Pos(width / 2, pocket_cy,
                          H - POCKET_RECESS + BACKGROUND_THICKNESS / 2) * Box(
             pocket_w, POCKET_DEPTH_Y, BACKGROUND_THICKNESS)
+        z_face = H - POCKET_RECESS + BACKGROUND_THICKNESS - LABEL_SINK
+
+        # icon on the left of the label area (auto-picked screw/nut/washer)
+        icon_part = None
+        text_reserve = 0.0
+        if symbol:
+            from .symbols import build_symbol
+            icon_w = min(11.0, pocket_w * 0.30)
+            icon_h = POCKET_DEPTH_Y - 3.0
+            icon = build_symbol(symbol, icon_w, icon_h, LABEL_RAISE + LABEL_SINK)
+            iw = icon.bounding_box().size.X
+            icon_cx = width / 2 - pocket_w / 2 + 2.0 + iw / 2
+            icon_part = Pos(icon_cx, pocket_cy, z_face) * icon
+            text_reserve = iw + 2.5
+
         raw = bin_spec["label"] if "label" in bin_spec else "Misc"
         if raw:
             cfg = {**params["labels"], **bin_spec.get("labels", {})}
@@ -235,13 +262,13 @@ def _pred_shelf_body(shell, cell, params, scoop_r, test,
                 cap_height=cfg["capHeight"],
                 depth=LABEL_RAISE + LABEL_SINK,
                 line_spacing=cfg["lineSpacing"],
-                max_width=pocket_w - 4,
+                max_width=pocket_w - 4 - text_reserve,
                 font=cfg["font"],
                 bold=cfg["bold"],
             )
-            label = (Pos(width / 2, pocket_cy,
-                         H - POCKET_RECESS + BACKGROUND_THICKNESS - LABEL_SINK)
-                     * solid)
+            label = Pos(width / 2 + text_reserve / 2, pocket_cy, z_face) * solid
+        if icon_part is not None:
+            label = icon_part if label is None else label + icon_part
     else:
         # retaining tabs over the pocket sides: the label plate's end tabs
         # slide under them (bend the plate slightly to insert, Pred-style)
