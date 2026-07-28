@@ -243,13 +243,13 @@ def _pred_shelf_body(shell, cell, params, scoop_r, test,
         text_reserve = 0.0
         if symbol:
             from .symbols import build_symbol
-            icon_w = min(11.0, pocket_w * 0.30)
-            icon_h = POCKET_DEPTH_Y - 3.0
+            icon_w = min(8.5, pocket_w * 0.24)
+            icon_h = POCKET_DEPTH_Y - 3.5
             icon = build_symbol(symbol, icon_w, icon_h, LABEL_RAISE + LABEL_SINK)
             iw = icon.bounding_box().size.X
             icon_cx = width / 2 - pocket_w / 2 + 2.0 + iw / 2
             icon_part = Pos(icon_cx, pocket_cy, z_face) * icon
-            text_reserve = iw + 2.5
+            text_reserve = iw + 2.0
 
         raw = bin_spec["label"] if "label" in bin_spec else "Misc"
         if raw:
