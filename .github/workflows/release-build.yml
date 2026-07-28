@@ -1,0 +1,68 @@
+name: Build container models on release
+
+# On a published release (or a manual run), build every container defined
+# in configs/*.yaml as multi-material 3MFs — bin on tool 1, label
+# background on tool 2, label text on tool 3 — and attach a per-profile
+# zip to the release.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write   # to upload assets onto the release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # OpenCascade (via OCP, pulled in by build123d) needs these at runtime
+      - name: System libraries for OpenCascade
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libgl1 libglu1-mesa libxrender1 libxext6 libsm6 zip
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync dependencies
+        run: uv sync
+
+      - name: Build every profile (individual bins only — no plates)
+        env:
+          CHECKERS: "1"          # cut the screw test-gauges
+        run: |
+          set -e
+          # not bin sets: box-labels are flat labels, spares-plate is a scratch plate
+          SKIP="box-labels spares-plate"
+          for cfg in configs/*.yaml; do
+            name=$(basename "$cfg" .yaml)
+            case " $SKIP " in *" $name "*) echo "skipping $name"; continue;; esac
+            echo "::group::$name"
+            uv run gridfinity-container-builder --config "$cfg" \
+              --bin-tool 1 --background-tool 2 --label-tool 3 \
+              --out "out/$name"
+            echo "::endgroup::"
+          done
+
+      - name: Zip each profile
+        run: |
+          cd out
+          for d in */; do
+            [ -n "$(ls -A "$d")" ] && (cd "$d" && zip -qr "../${d%/}.zip" .)
+          done
+
+      - name: Upload zips as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-models
+          path: out/*.zip
+
+      - name: Attach zips to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" out/*.zip --clobber

@@ -157,6 +157,33 @@ def _bed_shape_size(config_text: str) -> tuple[float, float] | None:
     return None
 
 
+def _skirt_brim_allowance(config_text: str | None) -> float:
+    """Outward clearance the slicer's skirt + brim need around each part,
+    read from an embedded config (brim_width/brim_type, skirt_distance,
+    skirts, extrusion width)."""
+    if not config_text:
+        return 0.0
+    vals: dict[str, str] = {}
+    for line in config_text.splitlines():
+        for key in ("brim_width", "brim_type", "skirt_distance", "skirts",
+                    "extrusion_width", "skirt_height"):
+            if line.startswith(key + " ="):
+                vals[key] = line.split("=", 1)[1].strip()
+
+    def num(k, d=0.0):
+        try:
+            return float(vals.get(k, d))
+        except ValueError:
+            return d
+
+    brim = num("brim_width") if vals.get("brim_type", "no_brim") not in ("no_brim", "") else 0.0
+    ew = num("extrusion_width") or 0.45
+    skirt = 0.0
+    if int(num("skirts")) > 0 and int(num("skirt_height", 1)) > 0:
+        skirt = num("skirt_distance", 2.0) + int(num("skirts")) * ew
+    return round(brim + skirt, 2)
+
+
 def _describe(spec: ContainerSpec) -> str:
     label = spec.label or f"({spec.type})"
     return (f'{spec.slug:<28} {spec.gx}x{spec.gy}  '
@@ -225,6 +252,11 @@ def main() -> None:
                          f"(default {DEFAULT_PURGE_TOWER[0]:g}x{DEFAULT_PURGE_TOWER[1]:g})")
     ap.add_argument("--spacing", type=float, default=None, metavar="MM",
                     help=f"gap between containers on a plate (default {DEFAULT_SPACING:g})")
+    ap.add_argument("--brim", type=float, default=None, metavar="MM",
+                    help="extra clearance around parts for the slicer's skirt + brim "
+                         "(keeps them on the bed and out of the tower zone); read from "
+                         "an embedded slicer config, or a printer preset's `brim`, when "
+                         "not given")
     ap.add_argument("--plates-per-file", type=int, default=None, metavar="N",
                     help="build plates grouped into each 3MF as PrusaSlicer multi-bed "
                          "projects (default 9 with --slicer-config, else 1 — see below)")
@@ -460,6 +492,21 @@ def main() -> None:
             else:
                 tower = DEFAULT_PURGE_TOWER
 
+        # Skirt + brim clearance: CLI > manifest plate.brim > slicer config
+        # > printer preset. Pads the edge margin and the tower zone so the
+        # skirt/brim stays on the bed and out of the tower.
+        if args.brim is not None:
+            brim = args.brim
+        elif plate_cfg.get("brim") is not None:
+            brim = float(plate_cfg["brim"])
+        elif slicer_config:
+            brim = _skirt_brim_allowance(slicer_config)
+        elif printer and printer.get("brim") is not None:
+            brim = float(printer["brim"])
+        else:
+            brim = 0.0
+        edge_margin = DEFAULT_MARGIN + brim
+
         # Reservation zone for the tower. With an embedded slicer config we
         # position the tower into the rear-right corner ourselves; without
         # one the tower sits wherever the slicer parks it by default, so
@@ -474,10 +521,11 @@ def main() -> None:
                     reserve = (min(reserve[0], pos["x"] - spacing),
                                min(reserve[1], pos["y"] - spacing))
                     tower_at = (pos["x"], pos["y"])
+            reserve = (reserve[0] - brim, reserve[1] - brim)  # keep brim off the tower
         try:
             plates = pack_plates([(s_, *s_.footprint) for s_ in catalog],
                                  plate_w, plate_d, spacing=spacing,
-                                 margin=DEFAULT_MARGIN, reserve=reserve)
+                                 margin=edge_margin, reserve=reserve)
         except ValueError as e:
             raise SystemExit(f"error: {e}")
 
@@ -510,6 +558,8 @@ def main() -> None:
                          "(the slicer's default tower spot)")
         elif tower:
             tower_msg = f", {tower_type} tower {tower[0]:g} x {tower[1]:g} mm reserved rear-right"
+        if brim:
+            tower_msg += f", {brim:g} mm skirt/brim clearance"
         print(f"{len(plates)} plate(s) of {plate_w:g} x {plate_d:g} mm, "
               f"up to {per_file} per 3MF{tower_msg}")
 
@@ -555,7 +605,7 @@ def main() -> None:
                 for s_ in with_labels
             ]
             label_plates_packed = pack_plates(label_items, plate_w, plate_d,
-                                              spacing=2.0, margin=DEFAULT_MARGIN,
+                                              spacing=2.0, margin=edge_margin,
                                               reserve=reserve)
             write_plate_files(label_plates_packed, get_label_plate, export_labels,
                               "labels-plates", "labels")

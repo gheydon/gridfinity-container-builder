@@ -30,4 +30,4 @@ containers:
   - {label: M3x4, size: 1x1, test: true}
   - {label: M3x6, size: 2x1, test: true}
   - {label: M3x8, size: 1x1, test: true}
-  - {label: M3x10, size: 2x1, test: true}
+  - {label: M3x10, size: 1x2, test: true}

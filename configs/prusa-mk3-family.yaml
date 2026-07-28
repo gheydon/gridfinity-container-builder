@@ -19,7 +19,7 @@ containers:
   - {label: M3x25, size: 2x1, count: 4, test: true}
   - {label: M3x30, size: 2x1, count: 9, test: true}
   - {label: M3x40, size: 2x1, count: 7, test: true}
-  - {label: M3x10, size: 2x1, count: 100, test: true}
+  - {label: M3x10, size: 1x2, count: 100, test: true}
   - {label: M5x16r, size: 2x1, count: 64, test: M5x16}
   - {label: 6-32, size: 1x1, count: 4, test: 3.9}
   - {label: LM8UU, size: 1x1, count: 10}

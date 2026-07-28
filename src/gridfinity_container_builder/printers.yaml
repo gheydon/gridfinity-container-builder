@@ -21,13 +21,13 @@
 printers:
   # Prusa
   prusa-mini:          { plate: { width: 180, depth: 180 }, tower: none }
-  prusa-mk3s:          { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU2S/MMU3
-  prusa-mk3-5:         { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
-  prusa-mk4:           { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
-  prusa-mk4s:          { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
-  prusa-core-one:      { plate: { width: 250, depth: 220 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
+  prusa-mk3s:          { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 }, brim: 6 }  # MMU2S/MMU3
+  prusa-mk3-5:         { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 }, brim: 6 }  # MMU3
+  prusa-mk4:           { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 }, brim: 6 }  # MMU3
+  prusa-mk4s:          { plate: { width: 250, depth: 210 }, tower: purge, towerPosition: { x: 180, y: 140 }, brim: 6 }  # MMU3
+  prusa-core-one:      { plate: { width: 250, depth: 220 }, tower: purge, towerPosition: { x: 180, y: 140 }, brim: 6 }  # MMU3
   prusa-core-one-indx: { plate: { width: 250, depth: 220 }, tower: none }    # INDX toolchanger
-  prusa-core-one-l:    { plate: { width: 300, depth: 300 }, tower: purge, towerPosition: { x: 180, y: 140 } }  # MMU3
+  prusa-core-one-l:    { plate: { width: 300, depth: 300 }, tower: purge, towerPosition: { x: 180, y: 140 }, brim: 6 }  # MMU3
   prusa-xl:            { plate: { width: 360, depth: 360 }, tower: prime }   # toolchanger
 
   # Bambu Lab (AMS purges to the waste chute)
