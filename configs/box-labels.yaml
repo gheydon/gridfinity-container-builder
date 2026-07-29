@@ -1,6 +1,8 @@
 # Pred storage-box front labels (the big slide-in label). Each entry:
 #   text   the text on the label (\n for two lines)
 #   width  box width in bins: 4, 5, 6 or 7 units (default 5)
+# capHeight/subScale set the first-line size and the shrink for later
+# lines; the text auto-fits the plate width and height either way.
 # The plate prints in the bin colour, the text in the label colour, with
 # the text running from 0.2 mm above the bed to 0.2 mm above the label.
 name: box-labels
@@ -9,20 +11,22 @@ boxLabels:
   - { text: "Prusa Printers\nSpare parts", width: 5, capHeight: 8, subScale: 0.7 }
   - { text: "Prusa Printers\nNuts and Bolts", width: 5, capHeight: 8, subScale: 0.7 }
 
-  # one label per build profile (model name big, brand/qualifier below)
+  # one label per build profile (model name big, qualifier below)
   - { text: "Core One\nPrusa", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "Core One\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa Core One\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
   - { text: "Core One+\nUpgrade", width: 5, capHeight: 8, subScale: 0.7 }
   - { text: "Enclosure\nPrusa", width: 5, capHeight: 8, subScale: 0.7 }
   - { text: "INDX FE\nConversion", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "Mini\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "MK2\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "MK3\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "MK4\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa Mini\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa MK2\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa MK3\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa MK4\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
   - { text: "Core One\nMK4 Conversion", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "MMU3\nUpgrade", width: 5, capHeight: 6, subScale: 0.7 }
-  - { text: "Stealthburner\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "Switchwire\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "Trident\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "V0.2\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
-  - { text: "V2.4\nVoron", width: 5, capHeight: 6, subScale: 0.7 }
+  - { text: "MMU3\nUpgrade", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa MMU2\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Prusa MMU3\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Voron Stealthburner\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Voron Switchwire\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Voron Trident\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Voron V0.2\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Voron V2.4\nSpare Parts", width: 5, capHeight: 8, subScale: 0.7 }

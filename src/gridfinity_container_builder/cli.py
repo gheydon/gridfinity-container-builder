@@ -369,9 +369,14 @@ def main() -> None:
         for entry in entries:
             if isinstance(entry, str):
                 entry = {"text": entry}
+            # per-entry style keys (capHeight, subScale, capHeights, lineGap,
+            # font, bold...) may sit at the entry top level or under `labels`
+            entry_style = {k: v for k, v in entry.items()
+                           if k not in ("text", "width", "labels")}
             container = build_box_label(entry.get("text", ""),
                                         int(entry.get("width", 5)),
-                                        {**(labels_cfg or {}), **entry.get("labels", {})})
+                                        {**(labels_cfg or {}), **entry_style,
+                                         **entry.get("labels", {})})
             box_path = out_dir / f"{container.name}.{args.format}"
             if box_path.exists() and not args.force:
                 print(f"  exists, skipping {box_path}")

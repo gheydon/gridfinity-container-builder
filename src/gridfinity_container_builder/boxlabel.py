@@ -34,7 +34,8 @@ CHAMFER = 0.2
 
 TEXT_BOTTOM = 0.2          # text starts this far above the bed
 TEXT_TOP_ABOVE = 0.2       # ... and finishes this far above the label top
-DEFAULT_CAP_HEIGHT = 13.0  # big front text; auto-shrinks to width
+TEXT_MARGIN_Y = 2.5        # keep text this far off the top/bottom plate edges
+DEFAULT_CAP_HEIGHT = 13.0  # big front text; auto-shrinks to width/height
 
 
 def slugify(text: str) -> str:
@@ -81,6 +82,7 @@ def build_box_label(text: str, width_units: int, labels_cfg: dict | None = None)
             depth=THICKNESS + TEXT_TOP_ABOVE - TEXT_BOTTOM,
             line_gap=cfg.get("lineGap", 2.2),
             max_width=width - 2 * (CORNER_R + 2),
+            max_height=HEIGHT - 2 * TEXT_MARGIN_Y,
             font=cfg["font"],
             bold=cfg["bold"],
         )
