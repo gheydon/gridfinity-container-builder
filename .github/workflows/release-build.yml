@@ -49,21 +49,23 @@ jobs:
             echo "::endgroup::"
           done
 
-      - name: Zip each profile
+      - name: Zip all bins into a single archive
         run: |
+          # one archive with every profile's bins under out/<profile>/
           cd out
-          for d in */; do
-            [ -n "$(ls -A "$d")" ] && (cd "$d" && zip -qr "../${d%/}.zip" .)
-          done
+          rm -f ../all-bins.zip
+          zip -qr ../all-bins.zip . -x '*.zip'
+          cd ..
+          mkdir -p dist && mv all-bins.zip dist/
 
-      - name: Upload zips as workflow artifacts
+      - name: Upload the archive as a workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: container-models
-          path: out/*.zip
+          path: dist/all-bins.zip
 
-      - name: Attach zips to the release
+      - name: Attach the archive to the release
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" out/*.zip --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" dist/all-bins.zip --clobber
