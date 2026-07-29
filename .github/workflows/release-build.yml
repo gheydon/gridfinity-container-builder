@@ -37,15 +37,23 @@ jobs:
           SYMBOLS: "1"           # add auto-picked head-type icons to labels
         run: |
           set -e
-          # not bin sets: box-labels are flat labels, spares-plate is a scratch plate
-          SKIP="box-labels spares-plate"
+          # spares-plate is a scratch plate, not a bin set
+          SKIP="spares-plate"
           for cfg in configs/*.yaml; do
             name=$(basename "$cfg" .yaml)
             case " $SKIP " in *" $name "*) echo "skipping $name"; continue;; esac
             echo "::group::$name"
-            uv run gridfinity-container-builder --config "$cfg" \
-              --bin-tool 1 --background-tool 2 --label-tool 3 \
-              --out "out/$name"
+            if [ "$name" = "box-labels" ]; then
+              # Pred box front labels: plate body on tool 1, text on tool 2
+              uv run gridfinity-container-builder --config "$cfg" \
+                --bin-tool 1 --label-tool 2 \
+                --out "out/$name"
+            else
+              # containers: bin 1, label background 2, label text 3
+              uv run gridfinity-container-builder --config "$cfg" \
+                --bin-tool 1 --background-tool 2 --label-tool 3 \
+                --out "out/$name"
+            fi
             echo "::endgroup::"
           done
 
