@@ -8,3 +8,4 @@ containers:
   - { label: "M3x10\nBHCS", head: button }   # button head
   - { label: "M3x10\nFHCS", head: flush }    # flush / countersunk
   - { label: "M2x4\nflat PH", head: pan }    # flat pan head, Phillips drive
+  - { label: M4N, size: 1x1, test: false }   # M4 nut: no gauge
