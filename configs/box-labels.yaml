@@ -5,7 +5,24 @@
 # the text running from 0.2 mm above the bed to 0.2 mm above the label.
 name: box-labels
 boxLabels:
-  - { text: MMU3 Upgrade, width: 5 }
-  - { text: "Core One\nHardware", width: 5 }
+  # generic content labels
   - { text: "Prusa Printers\nSpare parts", width: 5, capHeight: 8, subScale: 0.7 }
   - { text: "Prusa Printers\nNuts and Bolts", width: 5, capHeight: 8, subScale: 0.7 }
+
+  # one label per build profile (model name big, brand/qualifier below)
+  - { text: "Core One\nPrusa", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Core One\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Core One+\nUpgrade", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Enclosure\nPrusa", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "INDX FE\nConversion", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Mini\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "MK2\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "MK3\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "MK4\nPrusa Family", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Core One\nMK4 Conversion", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "MMU3\nUpgrade", width: 5, capHeight: 6, subScale: 0.7 }
+  - { text: "Stealthburner\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Switchwire\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "Trident\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "V0.2\nVoron", width: 5, capHeight: 8, subScale: 0.7 }
+  - { text: "V2.4\nVoron", width: 5, capHeight: 6, subScale: 0.7 }
