@@ -26,6 +26,7 @@ from pathlib import Path
 
 from .catalog import ContainerSpec, build_catalog, find_layouts, load_source
 from .container import LABEL_DEFAULTS, Container, build_container
+from .exceptions import SpecError
 from .export import export, export_labels, export_plate
 from .filaments import patch_slicer_config, resolve_filaments
 from .labelplate import LabelPlate, build_label_plate
@@ -192,7 +193,7 @@ def _describe(spec: ContainerSpec) -> str:
             f'{label.replace(chr(10), " / "):<20} from {", ".join(spec.sources)}')
 
 
-def main() -> None:
+def _run() -> None:
     ap = argparse.ArgumentParser(
         description="Build Gridfinity containers from screw-organiser layouts or "
                     "container manifests (sized for the Gridfinity Storage Box by Pred)")
@@ -660,6 +661,15 @@ def main() -> None:
             built_n += 1
 
     print(f"done: {built_n} built, {skipped} already existed ({time.time() - t0:.1f} s)")
+
+
+def main() -> None:
+    """CLI entry point: run the build, turning invalid-input SpecError
+    (raised by the shared config/geometry layer) into a clean exit."""
+    try:
+        _run()
+    except SpecError as e:
+        raise SystemExit(str(e))
 
 
 if __name__ == "__main__":

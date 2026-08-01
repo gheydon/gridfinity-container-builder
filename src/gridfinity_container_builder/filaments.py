@@ -23,6 +23,8 @@ from pathlib import Path
 
 import yaml
 
+from .exceptions import SpecError
+
 DEFAULT_TOOLS = {"bin": 1, "label": 2, "text": 3, "background": None}
 # background: the label-area plate; None means "same tool as the bin"
 
@@ -73,8 +75,8 @@ def to_hex(color: str) -> str:
 
         return webcolors.name_to_hex(c.lower()).upper()
     except ValueError:
-        raise SystemExit(f"unknown colour {color!r} — use an HTML colour name "
-                         "or #RRGGBB")
+        raise SpecError(f"unknown colour {color!r} — use an HTML colour name "
+                        "or #RRGGBB")
 
 
 def resolve_filaments(printer: str | None, bin_tool: int | None = None,
@@ -95,7 +97,7 @@ def resolve_filaments(printer: str | None, bin_tool: int | None = None,
         else:
             tool = requested or default_tool
         if tool < 1:
-            raise SystemExit(f"{name} tool must be >= 1, got {tool}")
+            raise SpecError(f"{name} tool must be >= 1, got {tool}")
         loaded = table.get(tool, {})
         slot = {"tool": tool, "color": None, "material": None, "explicit": set()}
         if loaded.get("color"):

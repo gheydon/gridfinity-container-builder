@@ -23,6 +23,7 @@ from build123d import (
 )
 
 from .container import Container
+from .exceptions import SpecError
 from .text import solid_label, solid_label_sized
 
 # gflabel PredBoxBase widths, confirmed against the STEP (5u -> 67.5)
@@ -51,8 +52,8 @@ def build_box_label(text: str, width_units: int, labels_cfg: dict | None = None)
     text -> label tool.
     """
     if width_units not in BOX_WIDTHS:
-        raise SystemExit(f"box label width must be one of {sorted(BOX_WIDTHS)} units, "
-                         f"got {width_units}")
+        raise SpecError(f"box label width must be one of {sorted(BOX_WIDTHS)} units, "
+                        f"got {width_units}")
     cfg = {"capHeight": DEFAULT_CAP_HEIGHT, "lineSpacing": 1.2,
            "font": "Arial", "bold": True, **(labels_cfg or {})}
     width = BOX_WIDTHS[width_units]

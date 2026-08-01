@@ -21,6 +21,8 @@ from pathlib import Path
 
 import yaml
 
+from .exceptions import SpecError
+
 
 def global_config_path() -> Path:
     base = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
@@ -71,8 +73,8 @@ def resolve_printer(name: str) -> dict:
     printers = data["printers"]
     if name not in printers:
         known = ", ".join(sorted(printers))
-        raise SystemExit(f"unknown printer {name!r} — known printers: {known}\n"
-                         f"add your own in {global_config_path()}")
+        raise SpecError(f"unknown printer {name!r} — known printers: {known}\n"
+                        f"add your own in {global_config_path()}")
     p = dict(printers[name])
     tower = p.get("tower", "none")
     if "towerSize" not in p and tower != "none":

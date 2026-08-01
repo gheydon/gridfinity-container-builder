@@ -10,6 +10,9 @@ geometry 3MF gets re-centred onto a single plate on import.
 
 from __future__ import annotations
 
+import io
+import os
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -57,10 +60,10 @@ def _mesh(shape) -> tuple[list, list]:
     return out_verts, out_tris
 
 
-def _write_project_3mf(path: Path, objects: list[dict], title: str,
+def _project_3mf_bytes(objects: list[dict], title: str,
                        slicer_config: str | None = None,
-                       wipe_towers: list[tuple[int, float, float]] | None = None) -> None:
-    """PrusaSlicer project 3MF.
+                       wipe_towers: list[tuple[int, float, float]] | None = None) -> bytes:
+    """PrusaSlicer project 3MF, returned as bytes.
 
     objects: [{name, volumes: [(vol_name, extruder, shape), ...], x, y}]
     Each object becomes one mesh whose volumes are triangle ranges in
@@ -131,7 +134,8 @@ def _write_project_3mf(path: Path, objects: list[dict], title: str,
     model.append(" </build>\n</model>\n")
     config.append("</config>\n")
 
-    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("[Content_Types].xml", _CONTENT_TYPES)
         z.writestr("_rels/.rels", _RELS)
         z.writestr("3D/3dmodel.model", "".join(model))
@@ -144,6 +148,26 @@ def _write_project_3mf(path: Path, objects: list[dict], title: str,
                       f'position_y="{y:g}" rotation_deg="0"/>\n'
                       for b, x, y in wipe_towers]
             z.writestr("Metadata/Prusa_Slicer_wipe_tower_information.xml", "".join(lines))
+    return buf.getvalue()
+
+
+def _write_project_3mf(path: Path, objects: list[dict], title: str,
+                       slicer_config: str | None = None,
+                       wipe_towers: list[tuple[int, float, float]] | None = None) -> None:
+    """Write the project 3MF (see `_project_3mf_bytes`) to a file."""
+    path.write_bytes(_project_3mf_bytes(objects, title, slicer_config, wipe_towers))
+
+
+def _stl_bytes(shape) -> bytes:
+    """build123d's export_stl only writes to a filename, so tessellate to a
+    temp file and read it back."""
+    with tempfile.NamedTemporaryFile(suffix=".stl", delete=False) as tf:
+        tmp = tf.name
+    try:
+        export_stl(shape, tmp, tolerance=_TOL, angular_tolerance=_ANG_TOL)
+        return Path(tmp).read_bytes()
+    finally:
+        os.unlink(tmp)
 
 
 def _tool(filaments: dict | None, slot: str) -> int:
@@ -253,3 +277,47 @@ def export_plate(placed: list[tuple[Container, float, float]], fmt: str,
     _write_project_3mf(out_path, objects, out_path.stem,
                        slicer_config=slicer_config, wipe_towers=wipe_towers)
     return out_path
+
+
+def export_bytes(container: Container, fmt: str,
+                 filaments: dict | None = None) -> bytes:
+    """In-memory equivalent of `export` — returns the STL or 3MF as bytes
+    (for a web response), with no filesystem writes."""
+    if fmt == "stl":
+        parts = [container.body, *container.labels]
+        if container.background is not None:
+            parts.append(container.background)
+        return _stl_bytes(_merged(parts))
+
+    return _project_3mf_bytes([{
+        "name": container.name,
+        "volumes": _container_volumes(container, filaments),
+        "x": 0.0, "y": 0.0,
+    }], container.name)
+
+
+def export_plate_bytes(placed: list[tuple[Container, float, float]], fmt: str,
+                       filaments: dict | None = None,
+                       slicer_config: str | None = None,
+                       wipe_towers: list[tuple[int, float, float]] | None = None,
+                       title: str = "plate") -> bytes:
+    """In-memory equivalent of `export_plate` — returns the plate STL or
+    (project) 3MF as bytes."""
+    if fmt == "stl":
+        from build123d import Pos
+
+        parts = []
+        for c, x, y in placed:
+            parts.append(Pos(x, y, 0) * c.body)
+            if c.background is not None:
+                parts.append(Pos(x, y, 0) * c.background)
+            parts.extend(Pos(x, y, 0) * lab for lab in c.labels)
+        return _stl_bytes(_merged(parts))
+
+    objects = [{
+        "name": c.name,
+        "volumes": _container_volumes(c, filaments),
+        "x": x, "y": y,
+    } for c, x, y in placed]
+    return _project_3mf_bytes(objects, title, slicer_config=slicer_config,
+                              wipe_towers=wipe_towers)
