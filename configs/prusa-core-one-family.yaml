@@ -22,6 +22,7 @@ containers:
   - {label: M3x12, size: 1x1, count: 4, test: true}
   - {label: M3x18, size: 1x1, count: 23, test: true}
   - {label: M3x25, size: 2x1, count: 4, test: true}
+  - {label: M3x25 SSS, size: 2x1, count: 2, test: true, head: none}   # Nextruder socket set screw (headless), 2 pcs incl. spare
   - {label: M3x30, size: 2x1, count: 15, test: true}
   - {label: M3x35, size: 2x1, count: 8, test: true}
   - {label: 6-32, size: 1x1, count: 2, test: 3.9}
