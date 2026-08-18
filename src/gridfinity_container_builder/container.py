@@ -140,14 +140,16 @@ def build_container(
     # branch — the labelled path below is untouched (byte-identical). New interior modules dispatch
     # on `spec.internal` here; the exterior post-processing (trim, groove, hollows, fillet) is shared.
     if getattr(spec, "internal", "labelled") == "money":
-        from .money import money_cavities
-        body = shell - money_cavities(cell, params, total_h, spec.bin.get("money") or {})
+        from .money import money_interior
+        cavities, money_labels = money_interior(cell, params, total_h, spec.bin.get("money") or {})
+        body = shell - cavities
         body -= Pos(width / 2, depth / 2, total_h - GF_INTERIOR_TRIM) * _prism_centered(
             width - 2 * GF_WALL, depth - 2 * GF_WALL, 1.15, 2)
         body -= body_groove
         body -= base_hollows
         body = _fillet_bottom_pockets(body)
-        return Container(name=spec.slug, size=(width, depth, total_h + lip_h), body=body)
+        return Container(name=spec.slug, size=(width, depth, total_h + lip_h),
+                         body=body, labels=money_labels)
 
     labelled = spec.type != "open"
     if spec.type == "scoop":

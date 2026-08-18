@@ -1,34 +1,40 @@
 """Money-tray interior generator: coins + (optional) notes.
 
-A money tray is an external Gridfinity shell whose interior is a packed grid of
-compartments — one sloped-floor pocket per selected coin denomination (coins lie
-flat and gather at the low front edge), plus an optional folded-note bay and an
-optional free-size slot. The footprint auto-sizes to the selected contents.
+Coins sit in rounded half-cylinder troughs (semicircular channels running front
+to back) packed tangent across the tray, so adjacent troughs just meet at a
+ridge — a scalloped surface, not square box holes. A solid label shelf runs
+along the FRONT with each coin's denomination embossed on it (which also shows
+the tray's orientation — labels face front). Behind the coins an optional
+folded-note bay and/or a free-size slot are plain box recesses. The footprint
+auto-sizes to the selected contents.
 
-Only the geometry + sizing live here; `container.py` owns the shell and the
-exterior post-processing (rim groove, base hollows, fillets, lid trim). See
-`build_container` — the money branch subtracts `money_cavities()` from the shell.
+`container.py` owns the shell + exterior post-processing; its money branch uses
+`money_interior()` → (cavities, labels), subtracts the cavities, and returns the
+labels in their own colour volume.
 """
 
 from __future__ import annotations
 
 import math
 
-from build123d import Part, Pos
+from build123d import Box, Cylinder, Part, Pos, Rot
 
-from .interior import extrude_profile_x
+from .text import solid_label
 
 PITCH = 42.0            # Gridfinity cell pitch (mm)
 GF_WALL = 2.6          # interior wall inset (matches container.GF_WALL)
-COIN_CLEAR = 2.2       # added to a coin's diameter for its pocket (fit + a little slack)
-DIVIDER = 2.4          # wall left between adjacent compartments
+COIN_CLEAR = 2.0       # added to a coin's diameter for its trough (fit slack)
+END_MARGIN = 2.0       # slack at the two ends of the coin row
+DIVIDER = 2.4          # wall between the coin zone and the note/slot zone (and between extras)
 NOTE_MARGIN = 4.0      # added around a folded note
-SLOPE = 0.30           # coin-pocket floor rise back-to-front, as a fraction of pocket depth
-SLOPE_MAX = 6.0        # cap the rise (mm)
-MAX_ROW_MM = 205.0     # wrap compartments to a new row past this width (keeps trays bed-friendly)
+LABEL_STRIP = 10.0     # solid front shelf depth that carries the denomination labels
+LABEL_CAP = 5.0        # denomination label cap height (mm)
+LABEL_DEPTH = 0.6      # raised label height (mm)
+COIN_LEN_MIN = 42.0    # coin trough length (front-back), min
+COIN_LEN_K = 1.5       # ... else 1.5x the largest coin so a few coins fit end to end
+MAX_ROW_MM = 205.0     # cap a row's width (keeps trays bed-friendly)
 
-# Coin diameters (mm). Non-round coins use the across-flats size (they still need
-# that much lane width). Values from the issuing mints / central banks.
+# Coin diameters (mm); non-round coins use the across-flats size. From the mints.
 COINS: dict[str, dict[str, float]] = {
     "AUD": {"5c": 19.41, "10c": 23.60, "20c": 28.65, "50c": 31.65, "$1": 25.00, "$2": 20.50},
     "NZD": {"10c": 20.50, "20c": 21.75, "50c": 24.75, "$1": 23.00, "$2": 26.50},
@@ -39,100 +45,104 @@ COINS: dict[str, dict[str, float]] = {
             "50p": 27.30, "£1": 23.43, "£2": 28.40},
 }
 
-# Largest banknote per currency as (width_mm, length_mm); a note is folded in half
-# along its length, so the bay is (length/2) x width.
+# Largest banknote per currency as (width_mm, length_mm); folded in half → bay = (length/2) x width.
 NOTES: dict[str, tuple[float, float]] = {
-    "AUD": (65.0, 158.0),
-    "NZD": (70.0, 155.0),
-    "EUR": (82.0, 153.0),
-    "USD": (66.3, 155.96),
-    "GBP": (77.0, 146.0),
+    "AUD": (65.0, 158.0), "NZD": (70.0, 155.0), "EUR": (82.0, 153.0),
+    "USD": (66.3, 155.96), "GBP": (77.0, 146.0),
 }
 
 CURRENCIES = list(COINS)
 
 
-def _compartments(cfg: dict) -> list[dict]:
-    """Resolve the money config into a list of {kind,label,w,d} compartments (mm)."""
+def _selected(cfg: dict):
     cur = str(cfg.get("currency", "AUD")).upper()
     table = COINS.get(cur, COINS["AUD"])
-    coins = cfg.get("coins") or list(table)
-    out: list[dict] = []
-    for denom in coins:
-        if denom not in table:
-            continue
-        s = table[denom] + COIN_CLEAR
-        out.append({"kind": "coin", "label": denom, "w": s, "d": s})
+    coins = [d for d in (cfg.get("coins") or list(table)) if d in table]
+    extras: list[dict] = []
     if cfg.get("noteBay") and cur in NOTES:
         nw, nl = NOTES[cur]
-        out.append({"kind": "note", "label": "notes",
-                    "w": nl / 2 + NOTE_MARGIN, "d": nw + NOTE_MARGIN})
+        extras.append({"kind": "note", "w": nl / 2 + NOTE_MARGIN, "d": nw + NOTE_MARGIN})
     fs = cfg.get("freeSlot")
     if fs and float(fs.get("w", 0)) > 0 and float(fs.get("d", 0)) > 0:
-        out.append({"kind": "slot", "label": "", "w": float(fs["w"]), "d": float(fs["d"])})
-    if not out:  # nothing selected → a single small pocket so we always build something
-        out.append({"kind": "coin", "label": "", "w": 24.0, "d": 24.0})
-    return out
+        extras.append({"kind": "slot", "w": float(fs["w"]), "d": float(fs["d"])})
+    if not coins and not extras:
+        coins = [next(iter(table))]  # always build something
+    return cur, table, coins, extras
 
 
-def _pack(items: list[dict]) -> tuple[list[dict], float, float]:
-    """Shelf-pack compartments into rows (front to back); return (placed, width, depth).
-    Each placed item gains x,y = its front-left corner in the packed block frame."""
-    rows: list[tuple[list[dict], float]] = []
-    row: list[dict] = []
-    roww = 0.0
-    for it in items:
-        add = it["w"] + (DIVIDER if row else 0.0)
-        if row and roww + add > MAX_ROW_MM:
-            rows.append((row, roww))
-            row, roww = [], 0.0
-            add = it["w"]
-        row.append({**it})
-        roww += add
-    if row:
-        rows.append((row, roww))
+def _layout(cfg: dict):
+    """Plan the tray in a front-left block frame. Returns
+    (troughs, strip, coin_zone_end, extras, total_w, total_h) where a coin trough is
+    {cx, r, denom}; `strip` is the front label-shelf depth; troughs span strip..coin_zone_end."""
+    _, table, coins, extras = _selected(cfg)
 
-    placed: list[dict] = []
-    y = 0.0
-    total_w = 0.0
-    for r, roww in rows:
-        rowh = max(i["d"] for i in r)
-        x = 0.0
-        for i in r:
-            i["x"], i["y"] = x, y
-            placed.append(i)
-            x += i["w"] + DIVIDER
-        total_w = max(total_w, roww)
-        y += rowh + DIVIDER
-    total_h = max(0.0, y - DIVIDER)
-    return placed, total_w, total_h
+    troughs: list[dict] = []
+    x = END_MARGIN
+    max_dia = 0.0
+    for denom in coins:
+        r = (table[denom] + COIN_CLEAR) / 2
+        troughs.append({"cx": x + r, "r": r, "denom": denom})
+        x += 2 * r
+        max_dia = max(max_dia, table[denom])
+    coin_w = (x + END_MARGIN) if coins else 0.0
+
+    strip = LABEL_STRIP if coins else 0.0
+    coin_len = max(COIN_LEN_MIN, COIN_LEN_K * max_dia) if coins else 0.0
+    coin_zone_end = strip + coin_len
+
+    # extras packed left-to-right in the back zone
+    ex_y = coin_zone_end + (DIVIDER if coins and extras else 0.0)
+    ex_x = 0.0
+    extra_d = 0.0
+    for e in extras:
+        e["x"], e["y"] = ex_x, ex_y
+        ex_x += e["w"] + DIVIDER
+        extra_d = max(extra_d, e["d"])
+    extra_w = max(0.0, ex_x - DIVIDER)
+
+    total_w = max(coin_w, extra_w)
+    total_h = coin_zone_end + ((DIVIDER + extra_d) if (coins and extras) else extra_d if extras else 0.0)
+    return troughs, strip, coin_zone_end, extras, total_w, total_h
 
 
 def money_tray_size(cfg: dict) -> tuple[int, int]:
     """Grid size (gx, gy) the money tray needs to fit its contents."""
-    _, w, h = _pack(_compartments(cfg))
-    gx = max(1, math.ceil((w + 2 * GF_WALL + 0.5) / PITCH))
+    _, _, _, _, w, h = _layout(cfg)
+    gx = max(1, math.ceil((min(w, MAX_ROW_MM) + 2 * GF_WALL + 0.5) / PITCH))
     gy = max(1, math.ceil((h + 2 * GF_WALL + 0.5) / PITCH))
     return gx, gy
 
 
-def money_cavities(cell: dict, params: dict, total_h: float, cfg: dict) -> Part:
-    """Union of the compartment cavities, positioned inside `cell` (centred)."""
-    placed, bw, bh = _pack(_compartments(cfg))
+def money_interior(cell: dict, params: dict, total_h: float, cfg: dict) -> tuple[Part, list[Part]]:
+    """(union of cavities, list of raised denomination labels) centred inside `cell`."""
+    troughs, strip, coin_end, extras, bw, bh = _layout(cfg)
     ox = cell["x"] + max(0.0, (cell["width"] - bw) / 2)
     oy = cell["y"] + max(0.0, (cell["depth"] - bh) / 2)
     floor = params["floor"]
-    top = total_h + 0.5  # small over-cut so the compartment tops open cleanly
     parts: list[Part] = []
-    for it in placed:
-        px, py, w, d = ox + it["x"], oy + it["y"], it["w"], it["d"]
-        if it["kind"] == "coin":
-            rise = min(d * SLOPE, SLOPE_MAX)   # floor rises from the low front to the back
-            prof = [(0.0, floor), (d, floor + rise), (d, top), (0.0, top)]
-        else:                                   # note bay / free slot: flat floor
-            prof = [(0.0, floor), (d, floor), (d, top), (0.0, top)]
-        parts.append(Pos(px, py, 0) * extrude_profile_x(prof, w))
+    labels: list[Part] = []
+
+    # coin troughs: horizontal half-cylinders (axis along Y), rim at the interior top,
+    # spanning strip..coin_end. Labels sit on the solid front shelf (oy..oy+strip).
+    coin_len = coin_end - strip
+    if troughs:
+        cyl_len = coin_len + 1.0
+        ymid = oy + strip + coin_len / 2
+        for t in troughs:
+            cav = Rot(90, 0, 0) * Cylinder(radius=t["r"], height=cyl_len)  # axis Y
+            parts.append(Pos(ox + t["cx"], ymid, total_h) * cav)
+            if t["denom"]:
+                lbl = solid_label(t["denom"], cap_height=LABEL_CAP, depth=LABEL_DEPTH,
+                                  max_width=2 * t["r"] - 2)
+                labels.append(Pos(ox + t["cx"], oy + strip / 2, total_h) * lbl)
+
+    # note bay / free slot: box recesses from the floor to (over) the top
+    bh_box = total_h - floor + 0.5
+    for e in extras:
+        box = Box(e["w"], e["d"], bh_box)
+        parts.append(Pos(ox + e["x"] + e["w"] / 2, oy + e["y"] + e["d"] / 2, floor + bh_box / 2) * box)
+
     union = parts[0]
     for p in parts[1:]:
         union = union + p
-    return union
+    return union, labels
