@@ -53,6 +53,7 @@ class ContainerSpec:
     scoop_radius: float
     bin: dict  # raw bin entry (label, test, head, count, ...)
     height_units: int | None = None  # override of the global height
+    internal: str = "labelled"  # which interior generator ("labelled" | "money")
     sources: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
@@ -70,7 +71,8 @@ class ContainerSpec:
         geo = {k: self.bin.get(k) for k in _GEOMETRY_KEYS if k in self.bin}
         geo.update(type=self.type, rampAngle=self.ramp_angle,
                    scoopRadius=self.scoop_radius, label=self.label,
-                   heightUnits=self.height_units)
+                   heightUnits=self.height_units,
+                   internal=self.internal, money=self.bin.get("money"))
         return json.dumps(geo, sort_keys=True)
 
 
@@ -194,8 +196,14 @@ def containers_from_manifest(manifest: dict) -> list[ContainerSpec]:
                 and _SCREW_LABEL_RE.search(str(label))):
             bin_spec["test"] = True
 
+        internal = str(bin_spec.get("internal", "labelled"))
         explicit = _entry_size(bin_spec)
-        if explicit:
+        if internal == "money":
+            # the money tray sizes itself to fit its coins/notes (unless an explicit size is given)
+            from .money import money_tray_size
+            mx, my = money_tray_size(bin_spec.get("money") or {})
+            gx, gy = explicit if explicit else (mx, my)
+        elif explicit:
             gx, gy = explicit
             length = item_length(bin_spec)
             if length is not None and units_for_length(length) > gx:
@@ -210,7 +218,7 @@ def containers_from_manifest(manifest: dict) -> list[ContainerSpec]:
         spec = ContainerSpec(
             slug="", gx=gx, gy=gy, type=btype,
             ramp_angle=defaults["rampAngle"], scoop_radius=defaults["scoopRadius"],
-            bin=bin_spec, height_units=bin_spec.get("heightUnits"),
+            bin=bin_spec, height_units=bin_spec.get("heightUnits"), internal=internal,
             sources=[source], warnings=warnings,
         )
         spec.slug = f"{slugify(spec.label or btype)}-{gx}x{gy}"
