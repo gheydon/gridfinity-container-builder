@@ -141,7 +141,7 @@ def build_container(
     # on `spec.internal` here; the exterior post-processing (trim, groove, hollows, fillet) is shared.
     if getattr(spec, "internal", "labelled") == "money":
         from .money import money_interior
-        cavities, money_labels = money_interior(cell, params, total_h, spec.bin.get("money") or {})
+        cavities, money_labels = money_interior(cell, params, total_h, width, depth, spec.bin.get("money") or {})
         body = shell - cavities
         body -= Pos(width / 2, depth / 2, total_h - GF_INTERIOR_TRIM) * _prism_centered(
             width - 2 * GF_WALL, depth - 2 * GF_WALL, 1.15, 2)

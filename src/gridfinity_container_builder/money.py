@@ -118,8 +118,27 @@ def money_tray_size(cfg: dict) -> tuple[int, int]:
     return gx, gy
 
 
-def money_interior(cell: dict, params: dict, total_h: float, cfg: dict) -> tuple[Part, list[Part]]:
-    """(union of cavities, list of raised denomination labels) centred inside `cell`."""
+def _edge_label(text: str, edge: str, rot: float, width: float, depth: float,
+                total_h: float, floor: float) -> Part | None:
+    """A raised text label on an outer wall (front/back/left/right), rotated `rot` degrees in-plane."""
+    if not text:
+        return None
+    face = {"front": depth, "back": depth, "left": width, "right": width}.get(edge, depth)
+    lbl = solid_label(text, cap_height=6.0, depth=0.6, max_width=face - 8)
+    lbl = Rot(0, 0, rot) * lbl                      # in-plane orientation
+    zc = floor + (total_h - floor) * 0.55           # vertical centre on the wall
+    if edge == "back":
+        return Pos(width / 2, depth, zc) * (Rot(90, 0, 180) * lbl)
+    if edge == "left":
+        return Pos(0, depth / 2, zc) * (Rot(0, -90, 90) * lbl)
+    if edge == "right":
+        return Pos(width, depth / 2, zc) * (Rot(0, 90, 90) * lbl)
+    return Pos(width / 2, 0, zc) * (Rot(90, 0, 0) * lbl)   # front (default)
+
+
+def money_interior(cell: dict, params: dict, total_h: float, width: float, depth: float,
+                   cfg: dict) -> tuple[Part, list[Part]]:
+    """(union of cavities, list of raised labels) — denomination labels + optional edge label."""
     troughs, strip, coin_end, extras, bw, bh = _layout(cfg)
     ox = cell["x"] + max(0.0, (cell["width"] - bw) / 2)
     oy = cell["y"] + max(0.0, (cell["depth"] - bh) / 2)
@@ -128,12 +147,14 @@ def money_interior(cell: dict, params: dict, total_h: float, cfg: dict) -> tuple
     labels: list[Part] = []
 
     # coin scoops: half-cylinders with the axis along X (across the coin's width), so each scoop
-    # curves front-to-back and opens toward the front. Rim at the interior top. Front-aligned at
-    # oy+strip; labels sit on the solid front shelf (oy..oy+strip).
+    # curves front-to-back and opens toward the front. Rim at the interior top. Each scoop is
+    # CENTRED in the coin zone (small coins get equal front/back margin); labels on the front shelf.
+    coin_zone = coin_end - strip
+    zone_mid = oy + strip + coin_zone / 2
     for t in troughs:
         L = 2 * t["r"]                                 # scoop spans the coin's width in X
         cav = Rot(0, 90, 0) * Cylinder(radius=t["r"], height=L)  # axis X
-        parts.append(Pos(ox + t["cx"], oy + strip + t["r"], total_h) * cav)
+        parts.append(Pos(ox + t["cx"], zone_mid, total_h) * cav)
         if t["denom"]:
             lbl = solid_label(t["denom"], cap_height=LABEL_CAP, depth=LABEL_DEPTH,
                               max_width=2 * t["r"] - 2)
@@ -144,6 +165,13 @@ def money_interior(cell: dict, params: dict, total_h: float, cfg: dict) -> tuple
     for e in extras:
         box = Box(e["w"], e["d"], bh_box)
         parts.append(Pos(ox + e["x"] + e["w"] / 2, oy + e["y"] + e["d"] / 2, floor + bh_box / 2) * box)
+
+    # optional custom edge label on any outer wall
+    el = cfg.get("edgeLabel") or {}
+    edge_lbl = _edge_label(str(el.get("text", "")).strip(), str(el.get("edge", "front")),
+                           float(el.get("rot", 0)), width, depth, total_h, floor)
+    if edge_lbl is not None:
+        labels.append(edge_lbl)
 
     union = parts[0]
     for p in parts[1:]:
