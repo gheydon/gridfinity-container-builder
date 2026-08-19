@@ -26,12 +26,12 @@ GF_WALL = 2.6          # interior wall inset (matches container.GF_WALL)
 COIN_CLEAR = 2.0       # added to a coin's diameter for its trough (fit slack)
 END_MARGIN = 2.0       # slack at the two ends of the coin row
 DIVIDER = 2.4          # wall between the coin zone and the note/slot zone (and between extras)
-NOTE_MARGIN = 4.0      # added around a folded note
+NOTE_MARGIN = 4.0      # added to the note-slot length
+NOTE_SLOT_W = 15.0     # note-slot width (notes stand on their long edge, stacked) — unfolded
+NOTE_SLOT_W_FOLD = 22.0  # ... a little wider when folded (folded notes are thicker)
 LABEL_STRIP = 10.0     # solid front shelf depth that carries the denomination labels
 LABEL_CAP = 5.0        # denomination label cap height (mm)
 LABEL_DEPTH = 0.6      # raised label height (mm)
-COIN_LEN_MIN = 42.0    # coin trough length (front-back), min
-COIN_LEN_K = 1.5       # ... else 1.5x the largest coin so a few coins fit end to end
 MAX_ROW_MM = 205.0     # cap a row's width (keeps trays bed-friendly)
 
 # Coin diameters (mm); non-round coins use the across-flats size. From the mints.
@@ -60,8 +60,12 @@ def _selected(cfg: dict):
     coins = [d for d in (cfg.get("coins") or list(table)) if d in table]
     extras: list[dict] = []
     if cfg.get("noteBay") and cur in NOTES:
-        nw, nl = NOTES[cur]
-        extras.append({"kind": "note", "w": nl / 2 + NOTE_MARGIN, "d": nw + NOTE_MARGIN})
+        _, nl = NOTES[cur]          # longest note's length
+        if cfg.get("noteFold"):
+            slot_len, slot_w = nl / 2, NOTE_SLOT_W_FOLD
+        else:
+            slot_len, slot_w = nl, NOTE_SLOT_W
+        extras.append({"kind": "note", "w": slot_len + NOTE_MARGIN, "d": slot_w})
     fs = cfg.get("freeSlot")
     if fs and float(fs.get("w", 0)) > 0 and float(fs.get("d", 0)) > 0:
         extras.append({"kind": "slot", "w": float(fs["w"]), "d": float(fs["d"])})
@@ -86,8 +90,9 @@ def _layout(cfg: dict):
         max_dia = max(max_dia, table[denom])
     coin_w = (x + END_MARGIN) if coins else 0.0
 
+    # each coin sits in a scoop that curves front-to-back, so the coin zone is one coin deep
     strip = LABEL_STRIP if coins else 0.0
-    coin_len = max(COIN_LEN_MIN, COIN_LEN_K * max_dia) if coins else 0.0
+    coin_len = (max_dia + COIN_CLEAR) if coins else 0.0
     coin_zone_end = strip + coin_len
 
     # extras packed left-to-right in the back zone
@@ -122,19 +127,17 @@ def money_interior(cell: dict, params: dict, total_h: float, cfg: dict) -> tuple
     parts: list[Part] = []
     labels: list[Part] = []
 
-    # coin troughs: horizontal half-cylinders (axis along Y), rim at the interior top,
-    # spanning strip..coin_end. Labels sit on the solid front shelf (oy..oy+strip).
-    coin_len = coin_end - strip
-    if troughs:
-        cyl_len = coin_len + 1.0
-        ymid = oy + strip + coin_len / 2
-        for t in troughs:
-            cav = Rot(90, 0, 0) * Cylinder(radius=t["r"], height=cyl_len)  # axis Y
-            parts.append(Pos(ox + t["cx"], ymid, total_h) * cav)
-            if t["denom"]:
-                lbl = solid_label(t["denom"], cap_height=LABEL_CAP, depth=LABEL_DEPTH,
-                                  max_width=2 * t["r"] - 2)
-                labels.append(Pos(ox + t["cx"], oy + strip / 2, total_h) * lbl)
+    # coin scoops: half-cylinders with the axis along X (across the coin's width), so each scoop
+    # curves front-to-back and opens toward the front. Rim at the interior top. Front-aligned at
+    # oy+strip; labels sit on the solid front shelf (oy..oy+strip).
+    for t in troughs:
+        L = 2 * t["r"]                                 # scoop spans the coin's width in X
+        cav = Rot(0, 90, 0) * Cylinder(radius=t["r"], height=L)  # axis X
+        parts.append(Pos(ox + t["cx"], oy + strip + t["r"], total_h) * cav)
+        if t["denom"]:
+            lbl = solid_label(t["denom"], cap_height=LABEL_CAP, depth=LABEL_DEPTH,
+                              max_width=2 * t["r"] - 2)
+            labels.append(Pos(ox + t["cx"], oy + strip / 2, total_h) * lbl)
 
     # note bay / free slot: box recesses from the floor to (over) the top
     bh_box = total_h - floor + 0.5
