@@ -28,6 +28,7 @@ containers:
   - {label: M3x18, size: 3x1, test: true}
   - {label: M3x25, size: 2x1, test: true}
   - {label: M3x25 SSS, size: 2x1, count: 2, test: true, head: none}   # Nextruder socket set screw (headless), 2 pcs incl. spare
+  - {label: 6-32 PWR, size: 1x1, count: 7, test: {dia: 3.9, length: 8, head: button}}   # PSU power-terminal screw #6-32 UNC (imperial), 7 pcs incl. spare
   - {label: M3x4, size: 1x1, test: true}
   - {label: M3x6, size: 2x1, test: true}
   - {label: M3x8, size: 1x1, test: true}
