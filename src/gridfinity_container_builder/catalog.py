@@ -72,7 +72,8 @@ class ContainerSpec:
         geo.update(type=self.type, rampAngle=self.ramp_angle,
                    scoopRadius=self.scoop_radius, label=self.label,
                    heightUnits=self.height_units,
-                   internal=self.internal, money=self.bin.get("money"))
+                   internal=self.internal, money=self.bin.get("money"),
+                   belt=self.bin.get("belt"))
         return json.dumps(geo, sort_keys=True)
 
 
@@ -202,6 +203,11 @@ def containers_from_manifest(manifest: dict) -> list[ContainerSpec]:
             # the money tray sizes itself to fit its coins/notes (unless an explicit size is given)
             from .money import money_tray_size
             mx, my = money_tray_size(bin_spec.get("money") or {})
+            gx, gy = explicit if explicit else (mx, my)
+        elif internal == "belt":
+            # the belt tray defaults to 4x4 (grows if an explicit coil diameter is asked for)
+            from .belt import belt_tray_size
+            mx, my = belt_tray_size(bin_spec.get("belt") or {})
             gx, gy = explicit if explicit else (mx, my)
         elif explicit:
             gx, gy = explicit

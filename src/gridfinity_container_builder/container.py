@@ -139,17 +139,47 @@ def build_container(
     # Pluggable INTERIOR generators share this external shell. The money tray is an additive
     # branch — the labelled path below is untouched (byte-identical). New interior modules dispatch
     # on `spec.internal` here; the exterior post-processing (trim, groove, hollows, fillet) is shared.
-    if getattr(spec, "internal", "labelled") == "money":
-        from .money import money_interior
-        cavities, money_labels = money_interior(cell, params, total_h, width, depth, spec.bin.get("money") or {})
+    internal = getattr(spec, "internal", "labelled")
+    if internal in ("money", "belt"):
+        int_background = None
+        if internal == "money":
+            from .money import money_interior
+            cavities, int_labels = money_interior(cell, params, total_h, width, depth, spec.bin.get("money") or {})
+        else:
+            from .belt import belt_interior
+            cavities, int_labels, int_background = belt_interior(cell, params, total_h, width, depth, spec.bin.get("belt") or {})
         body = shell - cavities
-        body -= Pos(width / 2, depth / 2, total_h - GF_INTERIOR_TRIM) * _prism_centered(
-            width - 2 * GF_WALL, depth - 2 * GF_WALL, 1.15, 2)
+        # The money tray trims its interior top so a stacked bin's feet seat; the
+        # belt pocket is deep and empty, so we KEEP the hub/label-shelf at full
+        # height (the hub then touches whatever sits on top — a box, or a grid).
+        if internal == "money":
+            body -= Pos(width / 2, depth / 2, total_h - GF_INTERIOR_TRIM) * _prism_centered(
+                width - 2 * GF_WALL, depth - 2 * GF_WALL, 1.15, 2)
         body -= body_groove
         body -= base_hollows
         body = _fillet_bottom_pockets(body)
-        return Container(name=spec.slug, size=(width, depth, total_h + lip_h),
-                         body=body, labels=money_labels)
+        # Optional grid on TOP OF THE HUB (belt tray): the gridfinity baseplate
+        # socket is CLIPPED to the hub's own footprint — only the bit of grid
+        # sitting on the solid hub survives, so nothing bridges the open pocket or
+        # the finger scoops. The frame's centre lands on the hub (even grid → a
+        # grid intersection; odd grid → mid centre-cell). Union re-meshes watertight.
+        top_h = lip_h
+        belt_cfg = spec.bin.get("belt") or {}
+        if internal == "belt" and belt_cfg.get("gridTop") and belt_cfg.get("hub"):
+            from build123d import Align, Cylinder
+            from gridfinity_build123d import BasePlateBlockFrame, BasePlateEqual
+            frame = BasePlateEqual(size_x=spec.gx, size_y=spec.gy,
+                                   baseplate_block=BasePlateBlockFrame())
+            fbb = frame.bounding_box()
+            frame = Pos(width / 2, depth / 2, total_h - fbb.min.Z) * frame
+            hub_d = float(belt_cfg.get("hubDiameter", 22.0))
+            hub_col = Pos(width / 2, depth / 2, total_h - 1) * Cylinder(
+                radius=hub_d / 2, height=fbb.size.Z + 2,
+                align=(Align.CENTER, Align.CENTER, Align.MIN))
+            body = body + (frame & hub_col)   # keep only the grid over the hub
+            top_h = fbb.size.Z
+        return Container(name=spec.slug, size=(width, depth, total_h + top_h),
+                         body=body, labels=int_labels, background=int_background)
 
     labelled = spec.type != "open"
     if spec.type == "scoop":
