@@ -308,6 +308,9 @@ def _project_ps3_bytes(objects: list[dict], title: str) -> bytes:
     for obj in objects:
         vol_json: list[dict] = []
         vol_ids: list[int] = []
+        # PrusaSlicer 3.0 uses 1-BASED extruder/tool numbers in this file (matches
+        # what its GUI writes) — extruder 1 = first filament, etc.
+        obj_extruder = max(1, int(obj["volumes"][0][1])) if obj["volumes"] else 1
         for name, extruder, shape in obj["volumes"]:
             verts, tris = _mesh(shape)
             nid += 1
@@ -328,7 +331,7 @@ def _project_ps3_bytes(objects: list[dict], title: str) -> bytes:
             vol_json.append({"id": vol_id, "name": name, "type": "ModelPart",
                              "source": {"objectIdx": -1, "volumeIdx": -1},
                              "volume_settings": {"wipe_into_infill": False,
-                                                 "extruder": max(0, int(extruder) - 1)}})
+                                                 "extruder": max(1, int(extruder))}})
         nid += 1
         obj_id = nid
         oo = ET.SubElement(res, q("object"), {"id": str(obj_id)})
@@ -338,7 +341,7 @@ def _project_ps3_bytes(objects: list[dict], title: str) -> bytes:
         ET.SubElement(build, q("item"), {"objectid": str(obj_id),
             "transform": f"1 0 0 0 1 0 0 0 1 {obj['x']:g} {obj['y']:g} 0", "printable": "1"})
         jobjects.append({"id": obj_id, "volumes": vol_json,
-                         "object_settings": {"extruder": 0, "wipe_into_objects": False}})
+                         "object_settings": {"extruder": obj_extruder, "wipe_into_objects": False}})
 
     proj = {"objects": jobjects, "project": {"id": "", "version": 1}, "config_containers": []}
     buf = io.BytesIO()
