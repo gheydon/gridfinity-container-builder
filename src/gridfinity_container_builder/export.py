@@ -11,8 +11,10 @@ geometry 3MF gets re-centred onto a single plate on import.
 from __future__ import annotations
 
 import io
+import json
 import os
 import tempfile
+import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
 
@@ -279,15 +281,91 @@ def export_plate(placed: list[tuple[Container, float, float]], fmt: str,
     return out_path
 
 
+_PS3_NS = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
+_PS3_CONTENT_TYPES = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    '<Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>'
+    '<Default Extension="json" ContentType="application/json"/></Types>')
+
+
+def _project_ps3_bytes(objects: list[dict], title: str) -> bytes:
+    """A PrusaSlicer 3.0 project (.3mf) — each object's volumes are separate
+    mesh objects nested as components with a per-volume extruder in the
+    PrusaSlicer3_project.json, which is how PS 3.0 keeps multi-material tool
+    assignments (the 2.x triangle-range volume format is flattened on load by
+    PS 3.0-alpha). Printer-agnostic: no config_container, so the viewer's own
+    printer/filaments apply. objects: [{name, volumes:[(name, extruder, shape)], x, y}].
+    """
+    ET.register_namespace("", _PS3_NS)
+    q = lambda t: f"{{{_PS3_NS}}}{t}"  # noqa: E731
+    root = ET.Element(q("model"), {"unit": "millimeter"})
+    root.set("xml:lang", "en-US")
+    res = ET.SubElement(root, q("resources"))
+    build = ET.SubElement(root, q("build"))
+    nid = 0
+    jobjects: list[dict] = []
+    for obj in objects:
+        vol_json: list[dict] = []
+        vol_ids: list[int] = []
+        for name, extruder, shape in obj["volumes"]:
+            verts, tris = _mesh(shape)
+            nid += 1
+            mesh_id = nid
+            mo = ET.SubElement(res, q("object"), {"id": str(mesh_id), "type": "model"})
+            mesh = ET.SubElement(mo, q("mesh"))
+            vs = ET.SubElement(mesh, q("vertices"))
+            for v in verts:
+                ET.SubElement(vs, q("vertex"), {"x": f"{v[0]:g}", "y": f"{v[1]:g}", "z": f"{v[2]:g}"})
+            ts = ET.SubElement(mesh, q("triangles"))
+            for t in tris:
+                ET.SubElement(ts, q("triangle"), {"v1": str(t[0]), "v2": str(t[1]), "v3": str(t[2])})
+            nid += 1
+            vol_id = nid
+            vo = ET.SubElement(res, q("object"), {"id": str(vol_id)})
+            ET.SubElement(ET.SubElement(vo, q("components")), q("component"), {"objectid": str(mesh_id)})
+            vol_ids.append(vol_id)
+            vol_json.append({"id": vol_id, "name": name, "type": "ModelPart",
+                             "source": {"objectIdx": -1, "volumeIdx": -1},
+                             "volume_settings": {"wipe_into_infill": False,
+                                                 "extruder": max(0, int(extruder) - 1)}})
+        nid += 1
+        obj_id = nid
+        oo = ET.SubElement(res, q("object"), {"id": str(obj_id)})
+        comps = ET.SubElement(oo, q("components"))
+        for vid in vol_ids:
+            ET.SubElement(comps, q("component"), {"objectid": str(vid)})
+        ET.SubElement(build, q("item"), {"objectid": str(obj_id),
+            "transform": f"1 0 0 0 1 0 0 0 1 {obj['x']:g} {obj['y']:g} 0", "printable": "1"})
+        jobjects.append({"id": obj_id, "volumes": vol_json,
+                         "object_settings": {"extruder": 0, "wipe_into_objects": False}})
+
+    proj = {"objects": jobjects, "project": {"id": "", "version": 1}, "config_containers": []}
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml", _PS3_CONTENT_TYPES)
+        z.writestr("_rels/.rels", _RELS)
+        z.writestr("3D/3dmodel.model", ET.tostring(root, xml_declaration=True, encoding="UTF-8"))
+        z.writestr("Metadata/PrusaSlicer3_project.json", json.dumps(proj))
+    return buf.getvalue()
+
+
 def export_bytes(container: Container, fmt: str,
                  filaments: dict | None = None) -> bytes:
-    """In-memory equivalent of `export` — returns the STL or 3MF as bytes
-    (for a web response), with no filesystem writes."""
+    """In-memory equivalent of `export` — returns the STL / 3MF / PS 3.0 project
+    as bytes (for a web response), with no filesystem writes."""
     if fmt == "stl":
         parts = [container.body, *container.labels]
         if container.background is not None:
             parts.append(container.background)
         return _stl_bytes(_merged(parts))
+
+    if fmt == "ps3":
+        return _project_ps3_bytes([{
+            "name": container.name,
+            "volumes": _container_volumes(container, filaments),
+            "x": 0.0, "y": 0.0,
+        }], container.name)
 
     return _project_3mf_bytes([{
         "name": container.name,
