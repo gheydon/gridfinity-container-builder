@@ -28,14 +28,19 @@ SCOOP_R = 15.0         # finger-scoop sphere radius
 HUB_D = 22.0           # default centre-hub diameter when enabled
 LABEL_CAP = 6.0        # top-label cap height (mm)
 DEFAULT_LABEL = "GT2 6mm"
-# Top label: a flat shelf is carved across the FRONT of the pocket and carries a
-# top-facing label — a raised background plate (own colour slot) with the text
-# proud on top, the 0.8 plate + 0.2 text stack Pred uses on his printable labels.
-SHELF_DEPTH = 16.0     # front top-shelf depth (mm) that holds the label
+# Top label: a thin LEDGE across the FRONT of the pocket (like a Pred label
+# shelf) carries a top-facing label — a raised background plate (own colour
+# slot) with the text proud on top, the 0.8 plate + 0.2 text stack Pred uses.
+# The ledge is only ROOF_T thick and the pocket stays open UNDERNEATH it (not a
+# solid plug), carried by the front + side walls. It auto-sizes to the text, so
+# multi-line labels (newlines) deepen the ledge.
+ROOF_T = 3.0           # ledge thickness (mm); pocket is hollow below it
+SHELF_MIN = 13.0       # min ledge depth (mm)
+SHELF_MAX = 34.0       # max ledge depth (mm) — keeps a usable pocket behind it
 BACKGROUND_THICKNESS = 0.8
 LABEL_RAISE = 0.2      # text proud of the plate
 LABEL_SINK = 0.1       # text sunk into the plate so the two fuse
-PLATE_SINK = 0.6       # plate sunk into the shelf top so it fuses to the body
+PLATE_SINK = 0.6       # plate sunk into the ledge top so it fuses to the body
 LABEL_MARGIN = 2.2     # plate border around the text
 
 
@@ -97,25 +102,28 @@ def belt_interior(cell: dict, params: dict, total_h: float, width: float,
     if n_scoops >= 2:
         cav = cav + Pos(cx + r, cy, total_h) * Sphere(SCOOP_R)
 
-    # TOP label: carve a flat shelf across the front of the pocket and lay a
-    # top-facing label on it (a background plate in its own colour slot with the
-    # text proud on top), so it reads when the bin sits on a shelf. Empty string
-    # ("") suppresses both (no shelf carved). Returns (cavities, labels, plate).
+    # TOP label: a thin LEDGE across the front top of the pocket carries a
+    # top-facing label (background plate in its own colour slot + proud text),
+    # so it reads when the bin sits on a shelf. The pocket stays open UNDERNEATH
+    # the ledge (hollow, Pred-style — not a solid plug). Multi-line labels
+    # (newlines) auto-deepen the ledge. "" suppresses both. Returns (cav, labels, plate).
     labels: list[Part] = []
     background = None
     text = cfg.get("label", DEFAULT_LABEL)
     if text:
-        # remove the pocket across the front strip → solid fill = a top shelf
-        cav = cav - (Pos(0, 0, floor) * Box(width, SHELF_DEPTH, poc_h,
-                     align=(Align.MIN, Align.MIN, Align.MIN)))
         cap = float(cfg.get("labelSize", LABEL_CAP))
         lbl = solid_label(str(text), cap_height=cap, depth=LABEL_RAISE + LABEL_SINK,
                           max_width=width - 4 * GF_WALL)
         bb = lbl.bounding_box()
         pw = bb.size.X + 2 * LABEL_MARGIN
-        ph = min(bb.size.Y + 2 * LABEL_MARGIN, SHELF_DEPTH - 2)
-        cyl = SHELF_DEPTH / 2                       # label centred on the shelf
-        z0 = total_h - PLATE_SINK                   # plate base (sunk into the shelf top)
+        ph = bb.size.Y + 2 * LABEL_MARGIN
+        shelf = max(SHELF_MIN, min(ph + 1.0, SHELF_MAX))
+        # restore a thin solid ledge in the top ROOF_T of the front strip — the
+        # pocket (already carved) stays open below it, so it's hollow underneath.
+        cav = cav - (Pos(0, 0, total_h - ROOF_T) * Box(
+            width, shelf, ROOF_T + OVERSHOOT, align=(Align.MIN, Align.MIN, Align.MIN)))
+        cyl = shelf / 2                             # label centred on the ledge
+        z0 = total_h - PLATE_SINK                   # plate base (sunk into the ledge top)
         # plate lies flat; text sits proud on it and reads from above (no rotation)
         background = Pos(cx, cyl, z0 + BACKGROUND_THICKNESS / 2) * Box(pw, ph, BACKGROUND_THICKNESS)
         labels.append(Pos(cx, cyl, z0 + BACKGROUND_THICKNESS - LABEL_SINK) * lbl)
