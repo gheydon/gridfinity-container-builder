@@ -282,6 +282,8 @@ def export_plate(placed: list[tuple[Container, float, float]], fmt: str,
 
 
 _PS3_NS = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
+# friendly part names PrusaSlicer 3.0 shows in its volume list
+_PS3_VOL_NAMES = {"bin": "Body", "background": "Label background", "label": "Label"}
 _PS3_CONTENT_TYPES = ('<?xml version="1.0" encoding="UTF-8"?>\n'
     '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
     '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
@@ -307,15 +309,19 @@ def _project_ps3_bytes(objects: list[dict], title: str) -> bytes:
     jobjects: list[dict] = []
     for obj in objects:
         vol_json: list[dict] = []
-        vol_ids: list[int] = []
+        comp_ids: list[int] = []
         # PrusaSlicer 3.0 uses 1-BASED extruder/tool numbers in this file (matches
         # what its GUI writes) — extruder 1 = first filament, etc.
         obj_extruder = max(1, int(obj["volumes"][0][1])) if obj["volumes"] else 1
+        # 2-level nesting (matches a GUI-saved PS 3.0 project): each volume is a
+        # named mesh <object>, referenced directly as a <component> of one parent
+        # object — the name attribute is what PS 3.0 shows in the part list.
         for name, extruder, shape in obj["volumes"]:
             verts, tris = _mesh(shape)
+            disp = _PS3_VOL_NAMES.get(name, name)
             nid += 1
             mesh_id = nid
-            mo = ET.SubElement(res, q("object"), {"id": str(mesh_id), "type": "model"})
+            mo = ET.SubElement(res, q("object"), {"id": str(mesh_id), "name": disp, "type": "model"})
             mesh = ET.SubElement(mo, q("mesh"))
             vs = ET.SubElement(mesh, q("vertices"))
             for v in verts:
@@ -323,21 +329,17 @@ def _project_ps3_bytes(objects: list[dict], title: str) -> bytes:
             ts = ET.SubElement(mesh, q("triangles"))
             for t in tris:
                 ET.SubElement(ts, q("triangle"), {"v1": str(t[0]), "v2": str(t[1]), "v3": str(t[2])})
-            nid += 1
-            vol_id = nid
-            vo = ET.SubElement(res, q("object"), {"id": str(vol_id)})
-            ET.SubElement(ET.SubElement(vo, q("components")), q("component"), {"objectid": str(mesh_id)})
-            vol_ids.append(vol_id)
-            vol_json.append({"id": vol_id, "name": name, "type": "ModelPart",
+            comp_ids.append(mesh_id)
+            vol_json.append({"id": mesh_id, "name": disp, "type": "ModelPart",
                              "source": {"objectIdx": -1, "volumeIdx": -1},
                              "volume_settings": {"wipe_into_infill": False,
                                                  "extruder": max(1, int(extruder))}})
         nid += 1
         obj_id = nid
-        oo = ET.SubElement(res, q("object"), {"id": str(obj_id)})
+        oo = ET.SubElement(res, q("object"), {"id": str(obj_id), "name": obj["name"]})
         comps = ET.SubElement(oo, q("components"))
-        for vid in vol_ids:
-            ET.SubElement(comps, q("component"), {"objectid": str(vid)})
+        for cid in comp_ids:
+            ET.SubElement(comps, q("component"), {"objectid": str(cid)})
         ET.SubElement(build, q("item"), {"objectid": str(obj_id),
             "transform": f"1 0 0 0 1 0 0 0 1 {obj['x']:g} {obj['y']:g} 0", "printable": "1"})
         jobjects.append({"id": obj_id, "volumes": vol_json,
