@@ -16,7 +16,8 @@ from __future__ import annotations
 
 from build123d import Align, Axis, Box, Cylinder, GeomType, Part, Pos, Sphere, fillet
 
-from .text import solid_label
+from .interior import GUSSET_SPACING, GUSSET_THICKNESS, extrude_profile_x
+from .text import solid_label_sized
 
 GF_WALL = 2.6          # interior wall inset (matches container.GF_WALL)
 PITCH = 42.0           # Gridfinity cell pitch (mm)
@@ -112,20 +113,62 @@ def belt_interior(cell: dict, params: dict, total_h: float, width: float,
     text = cfg.get("label", DEFAULT_LABEL)
     if text:
         cap = float(cfg.get("labelSize", LABEL_CAP))
-        lbl = solid_label(str(text), cap_height=cap, depth=LABEL_RAISE + LABEL_SINK,
-                          max_width=width - 4 * GF_WALL)
-        bb = lbl.bounding_box()
-        pw = bb.size.X + 2 * LABEL_MARGIN
-        ph = bb.size.Y + 2 * LABEL_MARGIN
+        sub = float(cfg.get("subScale", 0.65))
+        lines = str(text).split("\n")
+        caps = [(ln, cap if i == 0 else cap * sub) for i, ln in enumerate(lines)]
+        depth = LABEL_RAISE + LABEL_SINK
+        max_h = SHELF_MAX - 2 * LABEL_MARGIN
+
+        # optional icon on the LEFT of the text (same colour slot as the text)
+        icon = None
+        icon_w = 0.0
+        icon_gap = 0.0
+        kind = cfg.get("icon")
+        if kind:
+            from .symbols import build_symbol, canonical
+            k = canonical(kind)
+            if k:
+                icon = build_symbol(k, 10.0, min(cap * len(lines) + 3, max_h), depth)
+                ib = icon.bounding_box()
+                icon = Pos(-ib.center().X, -ib.center().Y, 0) * icon
+                icon_w = ib.size.X
+                icon_gap = 2.0
+
+        lbl = solid_label_sized(caps, depth=depth, max_height=max_h,
+                                max_width=width - 4 * GF_WALL - icon_w - icon_gap)
+        tb = lbl.bounding_box()
+        block_w = icon_w + icon_gap + tb.size.X
+        block_h = max(tb.size.Y, icon.bounding_box().size.Y if icon else 0.0)
+        pw = block_w + 2 * LABEL_MARGIN
+        ph = block_h + 2 * LABEL_MARGIN
         shelf = max(SHELF_MIN, min(ph + 1.0, SHELF_MAX))
         # restore a thin solid ledge in the top ROOF_T of the front strip — the
         # pocket (already carved) stays open below it, so it's hollow underneath.
         cav = cav - (Pos(0, 0, total_h - ROOF_T) * Box(
             width, shelf, ROOF_T + OVERSHOOT, align=(Align.MIN, Align.MIN, Align.MIN)))
+        # 45-degree support fins under the ledge (Pred-style gussets) so its
+        # underside prints self-supported instead of bridging the pocket. Each fin
+        # is a right triangle: vertical edge on the front wall, flat top under the
+        # ledge, 45-degree hypotenuse underneath (each layer sits on the one below).
+        z_led = total_h - ROOF_T
+        run = shelf - GF_WALL
+        if run > 1.0:
+            pts = [(GF_WALL, z_led), (shelf, z_led), (GF_WALL, z_led - run)]
+            n = max(1, round(width / GUSSET_SPACING) - 1)
+            for i in range(n):
+                fx = (i + 1) * width / (n + 1)
+                cav = cav - (Pos(fx - GUSSET_THICKNESS / 2, 0, 0)
+                             * extrude_profile_x(pts, GUSSET_THICKNESS))
         cyl = shelf / 2                             # label centred on the ledge
         z0 = total_h - PLATE_SINK                   # plate base (sunk into the ledge top)
-        # plate lies flat; text sits proud on it and reads from above (no rotation)
+        z_face = z0 + BACKGROUND_THICKNESS - LABEL_SINK
+        # plate lies flat; icon (left) + text (right) sit proud on it and read
+        # from above (no rotation). The block is centred on the ledge.
+        left = cx - block_w / 2
+        if icon is not None:
+            labels.append(Pos(left + icon_w / 2, cyl, z_face) * icon)
+        text_cx = left + icon_w + icon_gap + tb.size.X / 2
+        labels.append(Pos(text_cx, cyl, z_face) * lbl)
         background = Pos(cx, cyl, z0 + BACKGROUND_THICKNESS / 2) * Box(pw, ph, BACKGROUND_THICKNESS)
-        labels.append(Pos(cx, cyl, z0 + BACKGROUND_THICKNESS - LABEL_SINK) * lbl)
 
     return cav, labels, background
