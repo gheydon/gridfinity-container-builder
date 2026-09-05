@@ -139,7 +139,6 @@ def belt_interior(cell: dict, params: dict, total_h: float, width: float,
         tb = lbl.bounding_box()
         block_w = icon_w + icon_gap + tb.size.X
         block_h = max(tb.size.Y, icon.bounding_box().size.Y if icon else 0.0)
-        pw = block_w + 2 * LABEL_MARGIN
         ph = block_h + 2 * LABEL_MARGIN
         shelf = max(SHELF_MIN, min(ph + 1.0, SHELF_MAX))
         # restore a thin solid ledge in the top ROOF_T of the front strip — the
@@ -169,6 +168,8 @@ def belt_interior(cell: dict, params: dict, total_h: float, width: float,
             labels.append(Pos(left + icon_w / 2, cyl, z_face) * icon)
         text_cx = left + icon_w + icon_gap + tb.size.X / 2
         labels.append(Pos(text_cx, cyl, z_face) * lbl)
-        background = Pos(cx, cyl, z0 + BACKGROUND_THICKNESS / 2) * Box(pw, ph, BACKGROUND_THICKNESS)
+        # background is a full-width band across the ledge (wall to wall), text on top
+        background = Pos(cx, cyl, z0 + BACKGROUND_THICKNESS / 2) * Box(
+            width - 2 * GF_WALL, shelf, BACKGROUND_THICKNESS)
 
     return cav, labels, background
