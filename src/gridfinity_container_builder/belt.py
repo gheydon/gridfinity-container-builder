@@ -140,7 +140,9 @@ def belt_interior(cell: dict, params: dict, total_h: float, width: float,
         block_w = icon_w + icon_gap + tb.size.X
         block_h = max(tb.size.Y, icon.bounding_box().size.Y if icon else 0.0)
         ph = block_h + 2 * LABEL_MARGIN
-        shelf = max(SHELF_MIN, min(ph + 1.0, SHELF_MAX))
+        # grow the ledge to also cover the front-wall inset (the band starts past
+        # the front wall so it doesn't cross the rim lip/groove)
+        shelf = max(SHELF_MIN, min(ph + GF_WALL + 1.0, SHELF_MAX))
         # restore a thin solid ledge in the top ROOF_T of the front strip — the
         # pocket (already carved) stays open below it, so it's hollow underneath.
         cav = cav - (Pos(0, 0, total_h - ROOF_T) * Box(
@@ -158,18 +160,21 @@ def belt_interior(cell: dict, params: dict, total_h: float, width: float,
                 fx = (i + 1) * width / (n + 1)
                 cav = cav - (Pos(fx - GUSSET_THICKNESS / 2, 0, 0)
                              * extrude_profile_x(pts, GUSSET_THICKNESS))
-        cyl = shelf / 2                             # label centred on the ledge
+        # The label band covers only the EXPOSED ledge: inset from the front and
+        # side walls by GF_WALL so it never crosses the rim lip/groove or reaches
+        # the outside of the box; the back edge meets the pocket. Centred on it.
+        band_yf = GF_WALL                           # front edge (past the front wall)
+        band_cy = (band_yf + shelf) / 2
         z0 = total_h - PLATE_SINK                   # plate base (sunk into the ledge top)
         z_face = z0 + BACKGROUND_THICKNESS - LABEL_SINK
         # plate lies flat; icon (left) + text (right) sit proud on it and read
-        # from above (no rotation). The block is centred on the ledge.
+        # from above (no rotation). The block is centred on the band.
         left = cx - block_w / 2
         if icon is not None:
-            labels.append(Pos(left + icon_w / 2, cyl, z_face) * icon)
+            labels.append(Pos(left + icon_w / 2, band_cy, z_face) * icon)
         text_cx = left + icon_w + icon_gap + tb.size.X / 2
-        labels.append(Pos(text_cx, cyl, z_face) * lbl)
-        # background is a full-width band across the ledge (wall to wall), text on top
-        background = Pos(cx, cyl, z0 + BACKGROUND_THICKNESS / 2) * Box(
-            width - 2 * GF_WALL, shelf, BACKGROUND_THICKNESS)
+        labels.append(Pos(text_cx, band_cy, z_face) * lbl)
+        background = Pos(cx, band_cy, z0 + BACKGROUND_THICKNESS / 2) * Box(
+            width - 2 * GF_WALL, shelf - band_yf, BACKGROUND_THICKNESS)
 
     return cav, labels, background
