@@ -402,5 +402,9 @@ def export_plate_bytes(placed: list[tuple[Container, float, float]], fmt: str,
         "volumes": _container_volumes(c, filaments),
         "x": x, "y": y,
     } for c, x, y in placed]
+    if fmt == "ps3":
+        # PrusaSlicer 3.0 project: each container keeps its parts as multi-material
+        # volumes on their tools, positioned on the plate; printer-agnostic.
+        return _project_ps3_bytes(objects, title)
     return _project_3mf_bytes(objects, title, slicer_config=slicer_config,
                               wipe_towers=wipe_towers)
