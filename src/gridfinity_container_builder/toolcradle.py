@@ -1,0 +1,151 @@
+"""Tool-cradle interior generator: parallel lanes that cradle the pieces of a
+tool kit — round bits in troughs (optionally with a wider collar pocket), and
+tapered blocks in shaped pockets — plus a raised label on the free top ledge.
+
+Config (`bin["toolcradle"]`):
+    {"label": "Pocket Hole Jig",
+     "items": [
+        {"kind": "rod",   "d": 8, "length": 158},
+        {"kind": "rod",   "d": 8, "length": 160,
+         "collar": {"d": 17, "fromEnd": 10, "len": 75}},
+        {"kind": "block", "length": 105, "headW": 25, "tailW": 20,
+         "headLen": 63, "depth": 30},
+     ]}
+
+`container.py` owns the shell + exterior; its toolcradle branch calls
+`tool_cradle_interior()` -> (cavities, labels, background=None) and subtracts the
+cavities. The footprint comes from `tool_cradle_size()`.
+"""
+
+from __future__ import annotations
+
+import math
+
+from build123d import (Align, BuildLine, BuildSketch, Cylinder, Part, Polyline,
+                       Pos, Rot, extrude, make_face)
+
+from .text import solid_label
+
+GF_WALL = 2.6          # interior wall inset (matches container.GF_WALL)
+PITCH = 42.0           # Gridfinity cell pitch (mm)
+END_CLEAR = 2.0        # channel length past each item end
+LANE_GAP = 4.0         # wall between lanes
+EDGE_MARGIN = 3.0      # gap from the interior wall to the first/last lane
+ROD_CLEAR = 0.8        # radial clearance for a rod trough
+COLLAR_CLEAR = 1.0     # radial clearance for a collar pocket
+BLOCK_CLEAR = 1.0      # per-side clearance for a block pocket
+LABEL_CAP = 5.0        # top-ledge label cap height (mm)
+LABEL_DEPTH = 0.6      # raised label height (mm)
+
+
+def _pocket_hole_jig_items() -> list[dict]:
+    return [
+        {"kind": "rod", "d": 8.0, "length": 158.0},
+        {"kind": "rod", "d": 8.0, "length": 160.0,
+         "collar": {"d": 17.0, "fromEnd": 10.0, "len": 75.0}},
+        {"kind": "block", "length": 105.0, "headW": 25.0, "tailW": 20.0,
+         "headLen": 63.0, "depth": 30.0},
+    ]
+
+
+def _items(cfg: dict) -> list[dict]:
+    its = cfg.get("items")
+    return its if its else _pocket_hole_jig_items()
+
+
+def _lane_width(it: dict) -> float:
+    if it.get("kind") == "block":
+        return max(float(it["headW"]), float(it["tailW"])) + 2 * BLOCK_CLEAR
+    w = float(it["d"]) + 2 * ROD_CLEAR
+    if it.get("collar"):
+        w = max(w, float(it["collar"]["d"]) + 2 * COLLAR_CLEAR)
+    return w
+
+
+def tool_cradle_size(cfg: dict) -> tuple[int, int]:
+    """Grid size (gx, gy) to fit the lanes (length) and their widths (depth)."""
+    items = _items(cfg)
+    if not items:
+        return 2, 2
+    max_len = max(float(it["length"]) for it in items)
+    total_w = (sum(_lane_width(it) for it in items) + LANE_GAP * (len(items) - 1)
+               + 2 * (GF_WALL + EDGE_MARGIN))
+    gx = max(1, math.ceil((max_len + 2 * GF_WALL + END_CLEAR) / PITCH))
+    gy = max(1, math.ceil(total_w / PITCH))
+    return gx, gy
+
+
+def _trough(xc: float, yc: float, r: float, length: float, total_h: float) -> Part:
+    """Rounded (half-cylinder) channel along X, open at the rim, with flat ends."""
+    return Pos(xc, yc, total_h) * Rot(0, 90, 0) * Cylinder(
+        radius=r, height=length, align=(Align.CENTER, Align.CENTER, Align.CENTER))
+
+
+def _block_pocket(xc: float, yc: float, it: dict, total_h: float) -> Part:
+    """Tapered block pocket (wide head -> narrow tail), square corners, open top."""
+    hw = float(it["headW"]) + 2 * BLOCK_CLEAR
+    tw = float(it["tailW"]) + 2 * BLOCK_CLEAR
+    pd = float(it["length"]) + 2 * BLOCK_CLEAR
+    hl = float(it["headLen"])
+    depth = float(it["depth"])
+    pts = [(-pd / 2, hw / 2), (-pd / 2 + hl, hw / 2), (pd / 2, tw / 2),
+           (pd / 2, -tw / 2), (-pd / 2 + hl, -hw / 2), (-pd / 2, -hw / 2)]
+    with BuildSketch() as sk:
+        with BuildLine():
+            Polyline(*pts, close=True)
+        make_face()
+    return Pos(xc, yc, total_h - depth) * extrude(sk.sketch, amount=depth + 4)
+
+
+def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
+                         depth: float, cfg: dict) -> tuple[Part, list, None]:
+    """Lay the item lanes across the depth (front -> back). Returns
+    (cavities, labels, background). Rods run centred along the length; blocks are
+    shifted to the LEFT wall so their freed top ledge can carry the label."""
+    items = _items(cfg)
+    cx = width / 2
+    cav: Part | None = None
+
+    def cut(p: Part) -> None:
+        nonlocal cav
+        cav = p if cav is None else cav + p
+
+    y = GF_WALL + EDGE_MARGIN
+    lanes = []                                  # (item, y_centre, free_ledge_x0 or None)
+    for it in items:
+        w = _lane_width(it)
+        yc = y + w / 2
+        ledge_x0 = None
+        if it.get("kind") == "block":
+            pd = float(it["length"]) + 2 * BLOCK_CLEAR
+            xc = GF_WALL + EDGE_MARGIN + pd / 2      # align to the left wall
+            cut(_block_pocket(xc, yc, it, total_h))
+            ledge_x0 = xc + pd / 2
+        else:
+            L = float(it["length"])
+            cut(_trough(cx, yc, float(it["d"]) / 2 + ROD_CLEAR, L + END_CLEAR, total_h))
+            col = it.get("collar")
+            if col:
+                tip_x = cx - L / 2                    # collar-pocket ("from") end
+                cxc = tip_x + float(col["fromEnd"]) + float(col["len"]) / 2
+                cut(_trough(cxc, yc, float(col["d"]) / 2 + COLLAR_CLEAR,
+                            float(col["len"]), total_h))
+        lanes.append((it, yc, ledge_x0))
+        y += w + LANE_GAP
+
+    # label on the top ledge — the free flat top at the right of a block lane
+    labels: list[Part] = []
+    text = cfg.get("label", "")
+    if text:
+        interior_right = width - GF_WALL
+        spot = next(((x0, yc) for (it, yc, x0) in lanes
+                     if x0 is not None and interior_right - x0 > 20), None)
+        if spot is None:                             # fallback: back lane, right end
+            spot = (cx + 20, lanes[-1][1])
+        x0, yc = spot
+        xl = (x0 + interior_right) / 2
+        lbl = solid_label(str(text), cap_height=LABEL_CAP, depth=LABEL_DEPTH,
+                          max_width=interior_right - x0 - 5)
+        labels.append(Pos(xl, yc, total_h) * lbl)
+
+    return cav, labels, None

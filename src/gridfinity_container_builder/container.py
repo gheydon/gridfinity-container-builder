@@ -140,14 +140,17 @@ def build_container(
     # branch — the labelled path below is untouched (byte-identical). New interior modules dispatch
     # on `spec.internal` here; the exterior post-processing (trim, groove, hollows, fillet) is shared.
     internal = getattr(spec, "internal", "labelled")
-    if internal in ("money", "belt"):
+    if internal in ("money", "belt", "toolcradle"):
         int_background = None
         if internal == "money":
             from .money import money_interior
             cavities, int_labels = money_interior(cell, params, total_h, width, depth, spec.bin.get("money") or {})
-        else:
+        elif internal == "belt":
             from .belt import belt_interior
             cavities, int_labels, int_background = belt_interior(cell, params, total_h, width, depth, spec.bin.get("belt") or {})
+        else:
+            from .toolcradle import tool_cradle_interior
+            cavities, int_labels, int_background = tool_cradle_interior(cell, params, total_h, width, depth, spec.bin.get("toolcradle") or {})
         body = shell - cavities
         # The money tray trims its interior top so a stacked bin's feet seat; the
         # belt pocket is deep and empty, so we KEEP the hub/label-shelf at full

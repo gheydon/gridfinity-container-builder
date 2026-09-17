@@ -73,7 +73,7 @@ class ContainerSpec:
                    scoopRadius=self.scoop_radius, label=self.label,
                    heightUnits=self.height_units,
                    internal=self.internal, money=self.bin.get("money"),
-                   belt=self.bin.get("belt"))
+                   belt=self.bin.get("belt"), toolcradle=self.bin.get("toolcradle"))
         return json.dumps(geo, sort_keys=True)
 
 
@@ -208,6 +208,11 @@ def containers_from_manifest(manifest: dict) -> list[ContainerSpec]:
             # the belt tray defaults to 4x4 (grows if an explicit coil diameter is asked for)
             from .belt import belt_tray_size
             mx, my = belt_tray_size(bin_spec.get("belt") or {})
+            gx, gy = explicit if explicit else (mx, my)
+        elif internal == "toolcradle":
+            # the tool cradle sizes itself to fit its item lanes (unless a size is given)
+            from .toolcradle import tool_cradle_size
+            mx, my = tool_cradle_size(bin_spec.get("toolcradle") or {})
             gx, gy = explicit if explicit else (mx, my)
         elif explicit:
             gx, gy = explicit
