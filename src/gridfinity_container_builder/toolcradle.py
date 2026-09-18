@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import math
 
-from build123d import (Align, BuildLine, BuildSketch, Cylinder, Part, Polyline,
+from build123d import (Align, Box, BuildLine, BuildSketch, Cylinder, Part, Polyline,
                        Pos, Rot, extrude, make_face)
 
 from .text import solid_label
@@ -132,6 +132,39 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
                             float(col["len"]), total_h))
         lanes.append((it, yc, ledge_x0))
         y += w + LANE_GAP
+
+    # LIGHTEN: sealed voids under each lane (below the pocket/trough floor) so the
+    # bin isn't a near-solid block. Kept narrow per lane so the floor above bridges
+    # cleanly, and started above the gridfinity base so the feet stay intact.
+    if cfg.get("lighten", True):
+        base_top = params["floor"] - 2.0            # params["floor"] = base_h + FLOOR(2)
+        z0 = base_top + 0.6
+        VW = 1.6                                    # void inset from the lane walls
+        for it, yc, ledge_x0 in lanes:
+            w = _lane_width(it)
+            if it.get("kind") == "block":
+                pd = float(it["length"]) + 2 * BLOCK_CLEAR
+                bx = GF_WALL + EDGE_MARGIN + pd / 2
+                ceil = (total_h - float(it["depth"])) - 1.5      # under the block pocket
+                if ceil - z0 > 3:
+                    cut(Pos(bx, yc, z0) * Box(pd - 2 * VW, w - 2 * VW, ceil - z0,
+                                              align=(Align.CENTER, Align.CENTER, Align.MIN)))
+                if ledge_x0 is not None:                          # under the label ledge
+                    ir = width - GF_WALL
+                    lw = ir - ledge_x0
+                    if lw > 6:
+                        cut(Pos((ledge_x0 + ir) / 2, yc, z0) * Box(
+                            lw - 2 * VW, w - 2 * VW, (total_h - 4) - z0,
+                            align=(Align.CENTER, Align.CENTER, Align.MIN)))
+            else:
+                L = float(it["length"])
+                rr = float(it["d"]) / 2 + ROD_CLEAR
+                if it.get("collar"):
+                    rr = max(rr, float(it["collar"]["d"]) / 2 + COLLAR_CLEAR)
+                ceil = (total_h - rr) - 1.5
+                if ceil - z0 > 3:
+                    cut(Pos(cx, yc, z0) * Box(L - 2 * VW, w - 2 * VW, ceil - z0,
+                                              align=(Align.CENTER, Align.CENTER, Align.MIN)))
 
     # label on the top ledge — the free flat top at the right of a block lane
     labels: list[Part] = []
