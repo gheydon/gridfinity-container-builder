@@ -176,25 +176,33 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
                                               align=(Align.CENTER, Align.CENTER, Align.MIN)))
 
     # label on the top ledge — the free flat top at the right of a block lane
+    # orient "y": rotate the whole (local length×cross) assembly +90° about Z so the
+    # length axis lands along the bin depth, then shift back into the [0,width]×[0,depth] box.
+    if orient == "y" and cav is not None:
+        cav = Pos(Ly, 0, 0) * Rot(0, 0, 90) * cav
+
+    # Label: always read HORIZONTALLY on the finished bin (never rotated with the
+    # assembly). Placed on the free ledge; T maps the local ledge centre to global.
     labels: list[Part] = []
     text = cfg.get("label", "")
     if text:
         interior_right = Lx - GF_WALL
-        spot = next(((x0, yc) for (it, yc, x0) in lanes
+        spot = next(((x0, yc, _lane_width(it)) for (it, yc, x0) in lanes
                      if x0 is not None and interior_right - x0 > 20), None)
         if spot is None:                             # fallback: back lane, right end
-            spot = (cx + 20, lanes[-1][1])
-        x0, yc = spot
+            spot = (cx + 20, lanes[-1][1], _lane_width(lanes[-1][0]))
+        x0, yc, lane_w = spot
         xl = (x0 + interior_right) / 2
-        lbl = solid_label(str(text), cap_height=LABEL_CAP, depth=LABEL_DEPTH,
-                          max_width=interior_right - x0 - 5)
-        labels.append(Pos(xl, yc, total_h) * lbl)
-
-    # orient "y": rotate the whole (local length×cross) assembly +90° about Z so the
-    # length axis lands along the bin depth, then shift back into the [0,width]×[0,depth] box.
-    if orient == "y":
-        T = Pos(Ly, 0, 0) * Rot(0, 0, 90)
-        cav = T * cav if cav is not None else None
-        labels = [T * l for l in labels]
+        if orient == "y":
+            # ledge is now narrow in global X (= lane width) and deep in global Y;
+            # keep the text upright, fit to the lane width.
+            gx, gy = Ly - yc, xl
+            lbl = solid_label(str(text), cap_height=LABEL_CAP, depth=LABEL_DEPTH,
+                              max_width=lane_w - 4)
+        else:
+            gx, gy = xl, yc
+            lbl = solid_label(str(text), cap_height=LABEL_CAP, depth=LABEL_DEPTH,
+                              max_width=interior_right - x0 - 5)
+        labels.append(Pos(gx, gy, total_h) * lbl)
 
     return cav, labels, None
