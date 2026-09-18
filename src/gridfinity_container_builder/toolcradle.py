@@ -22,7 +22,7 @@ from __future__ import annotations
 import math
 
 from build123d import (Align, Box, BuildLine, BuildSketch, Cylinder, Part, Polyline,
-                       Pos, Rot, extrude, make_face)
+                       Pos, Rot, Sphere, extrude, make_face)
 
 from .text import solid_label
 
@@ -36,6 +36,7 @@ COLLAR_CLEAR = 1.0     # radial clearance for a collar pocket
 BLOCK_CLEAR = 1.0      # per-side clearance for a block pocket
 LABEL_CAP = 5.0        # top-ledge label cap height (mm)
 LABEL_DEPTH = 0.6      # raised label height (mm)
+SCOOP_R = 11.0         # finger-scoop radius at a block's tail end
 
 
 def _pocket_hole_jig_items() -> list[dict]:
@@ -129,6 +130,8 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
             pd = float(it["length"]) + 2 * BLOCK_CLEAR
             xc = GF_WALL + EDGE_MARGIN + pd / 2      # align to the left wall
             cut(_block_pocket(xc, yc, it, total_h))
+            if it.get("scoop", True):                # finger scoop at the narrow tail end
+                cut(Pos(xc + pd / 2 - 3, yc, total_h) * Sphere(SCOOP_R))
             ledge_x0 = xc + pd / 2
         else:
             L = float(it["length"])
