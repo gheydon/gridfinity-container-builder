@@ -70,9 +70,12 @@ def tool_cradle_size(cfg: dict) -> tuple[int, int]:
     max_len = max(float(it["length"]) for it in items)
     total_w = (sum(_lane_width(it) for it in items) + LANE_GAP * (len(items) - 1)
                + 2 * (GF_WALL + EDGE_MARGIN))
-    gx = max(1, math.ceil((max_len + 2 * GF_WALL + END_CLEAR) / PITCH))
-    gy = max(1, math.ceil(total_w / PITCH))
-    return gx, gy
+    g_len = max(1, math.ceil((max_len + 2 * GF_WALL + END_CLEAR) / PITCH))
+    g_cross = max(1, math.ceil(total_w / PITCH))
+    # orient "y" (portrait) runs the items along the depth, so the units swap
+    if cfg.get("orient") == "y":
+        return g_cross, g_len
+    return g_len, g_cross
 
 
 def _trough(xc: float, yc: float, r: float, length: float, total_h: float) -> Part:
@@ -103,7 +106,13 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
     (cavities, labels, background). Rods run centred along the length; blocks are
     shifted to the LEFT wall so their freed top ledge can carry the label."""
     items = _items(cfg)
-    cx = width / 2
+    # orient "x" (default): items run along the width (left-right). orient "y"
+    # (portrait): items run along the depth — we build in a local length×cross
+    # frame (Lx = length axis, Ly = cross axis) and rotate it onto the bin at the end.
+    orient = cfg.get("orient", "x")
+    Lx = depth if orient == "y" else width      # length-axis extent (local x)
+    Ly = width if orient == "y" else depth       # cross-axis extent (local y)
+    cx = Lx / 2
     cav: Part | None = None
 
     def cut(p: Part) -> None:
@@ -150,7 +159,7 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
                     cut(Pos(bx, yc, z0) * Box(pd - 2 * VW, w - 2 * VW, ceil - z0,
                                               align=(Align.CENTER, Align.CENTER, Align.MIN)))
                 if ledge_x0 is not None:                          # under the label ledge
-                    ir = width - GF_WALL
+                    ir = Lx - GF_WALL
                     lw = ir - ledge_x0
                     if lw > 6:
                         cut(Pos((ledge_x0 + ir) / 2, yc, z0) * Box(
@@ -170,7 +179,7 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
     labels: list[Part] = []
     text = cfg.get("label", "")
     if text:
-        interior_right = width - GF_WALL
+        interior_right = Lx - GF_WALL
         spot = next(((x0, yc) for (it, yc, x0) in lanes
                      if x0 is not None and interior_right - x0 > 20), None)
         if spot is None:                             # fallback: back lane, right end
@@ -180,5 +189,12 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
         lbl = solid_label(str(text), cap_height=LABEL_CAP, depth=LABEL_DEPTH,
                           max_width=interior_right - x0 - 5)
         labels.append(Pos(xl, yc, total_h) * lbl)
+
+    # orient "y": rotate the whole (local length×cross) assembly +90° about Z so the
+    # length axis lands along the bin depth, then shift back into the [0,width]×[0,depth] box.
+    if orient == "y":
+        T = Pos(Ly, 0, 0) * Rot(0, 0, 90)
+        cav = T * cav if cav is not None else None
+        labels = [T * l for l in labels]
 
     return cav, labels, None
