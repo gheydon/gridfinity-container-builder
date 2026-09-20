@@ -181,6 +181,21 @@ def build_container(
                 align=(Align.CENTER, Align.CENTER, Align.MIN))
             body = body + (frame & hub_col)   # keep only the grid over the hub
             top_h = fbb.size.Z
+        # TWO-TONE tool cradle: the top layer prints in its own colour (the
+        # "background" slot) and the body below — whose surfaces form the pocket
+        # cut-outs — in the bin colour. Split the finished body by a horizontal
+        # slab at the rim so the two volumes tile exactly (no overlap). When no
+        # distinct top colour is chosen the background slot follows the bin, so
+        # this is a harmless no-op visually.
+        if internal == "toolcradle" and int_background is None:
+            from build123d import Align, Box
+            tl = float((spec.bin.get("toolcradle") or {}).get("topLayer", 2.0))
+            if tl > 0:
+                slab = Pos(width / 2, depth / 2, total_h - tl) * Box(
+                    width + 2, depth + 2, tl + top_h + 5,
+                    align=(Align.CENTER, Align.CENTER, Align.MIN))
+                int_background = body & slab
+                body = body - slab
         return Container(name=spec.slug, size=(width, depth, total_h + top_h),
                          body=body, labels=int_labels, background=int_background)
 

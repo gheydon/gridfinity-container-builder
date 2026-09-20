@@ -31,8 +31,8 @@ PITCH = 42.0           # Gridfinity cell pitch (mm)
 END_CLEAR = 2.0        # channel length past each item end
 LANE_GAP = 4.0         # wall between lanes
 EDGE_MARGIN = 3.0      # gap from the interior wall to the first/last lane
-ROD_CLEAR = 0.8        # radial clearance for a rod trough
-COLLAR_CLEAR = 1.0     # radial clearance for a collar pocket
+ROD_CLEAR = 1.2        # radial clearance for a rod trough (a drill bit drops in from the top)
+COLLAR_CLEAR = 1.75    # radial clearance for a collar pocket (drill stop collar — roomier)
 BLOCK_CLEAR = 1.0      # per-side clearance for a block pocket
 BLADE_MARGIN = 1.0     # per-side lane margin for a blade pocket (pocket dims are final)
 LABEL_CAP = 5.0        # top-ledge label cap height (mm)
@@ -46,7 +46,7 @@ def _pocket_hole_jig_items() -> list[dict]:
         {"kind": "rod", "d": 8.0, "length": 160.0,
          "collar": {"d": 17.0, "fromEnd": 10.0, "len": 75.0}},
         {"kind": "block", "length": 105.0, "headW": 25.0, "tailW": 20.0,
-         "headLen": 63.0, "depth": 30.0},
+         "headLen": 63.0, "depth": 24.0},   # jig is ~25 high — sit it ~1mm proud
     ]
 
 
