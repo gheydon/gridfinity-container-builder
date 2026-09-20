@@ -34,6 +34,7 @@ EDGE_MARGIN = 3.0      # gap from the interior wall to the first/last lane
 ROD_CLEAR = 0.8        # radial clearance for a rod trough
 COLLAR_CLEAR = 1.0     # radial clearance for a collar pocket
 BLOCK_CLEAR = 1.0      # per-side clearance for a block pocket
+BLADE_MARGIN = 1.0     # per-side lane margin for a blade pocket (pocket dims are final)
 LABEL_CAP = 5.0        # top-ledge label cap height (mm)
 LABEL_DEPTH = 0.6      # raised label height (mm)
 SCOOP_R = 11.0         # finger-scoop radius at a block's tail end
@@ -57,6 +58,10 @@ def _items(cfg: dict) -> list[dict]:
 def _lane_width(it: dict) -> float:
     if it.get("kind") == "block":
         return max(float(it["headW"]), float(it["tailW"])) + 2 * BLOCK_CLEAR
+    if it.get("kind") == "blade":
+        # a blade's params ARE final pocket dims (measured from a proven holder),
+        # so the lane is just the widest zone plus a nominal wall margin.
+        return float(it["headW"]) + 2 * BLADE_MARGIN
     w = float(it["d"]) + 2 * ROD_CLEAR
     if it.get("collar"):
         w = max(w, float(it["collar"]["d"]) + 2 * COLLAR_CLEAR)
@@ -101,6 +106,42 @@ def _block_pocket(xc: float, yc: float, it: dict, total_h: float) -> Part:
     return Pos(xc, yc, total_h - depth) * extrude(sk.sketch, amount=depth + 4)
 
 
+def _blade_pocket(x0: float, yc: float, it: dict, total_h: float) -> Part:
+    """Keyhole edge-slot for a folded tool stored ON ITS EDGE (angle finder,
+    caliper, folding rule): a round-ended HEAD pocket -> a NECK -> a thin deep
+    SLOT for the folded blades. Head closed end sits at x0 (left interior wall);
+    the pocket runs +X. Params are final POCKET dims (clearance already baked in).
+    """
+    headW = float(it["headW"])
+    headLen = float(it["headLen"])
+    neckW = float(it.get("neckW", headW))
+    neckLen = float(it.get("neckLen", 0.0))
+    slotW = float(it["slotW"])
+    length = float(it["length"])
+    depth = float(it["depth"])
+    ntap = float(it.get("neckTap", 8.0))   # head->neck transition
+    stap = float(it.get("slotTap", 8.0))   # neck->slot transition
+    r = headW / 2.0
+    xa = r                                 # flat head edge starts past the round cap
+    xb = max(xa, headLen)
+    xc = xb + ntap
+    xd = xc + neckLen
+    xe = xd + stap
+    xf = max(xe, length)
+    pts = [(xa, headW / 2), (xb, headW / 2), (xc, neckW / 2), (xd, neckW / 2),
+           (xe, slotW / 2), (xf, slotW / 2), (xf, -slotW / 2), (xe, -slotW / 2),
+           (xd, -neckW / 2), (xc, -neckW / 2), (xb, -headW / 2), (xa, -headW / 2)]
+    with BuildSketch() as sk:
+        with BuildLine():
+            Polyline(*pts, close=True)
+        make_face()
+    z0 = total_h - depth
+    body = Pos(x0, yc, z0) * extrude(sk.sketch, amount=depth + 4)
+    cap = Pos(x0 + r, yc, z0) * Cylinder(               # round the closed head end
+        radius=r, height=depth + 4, align=(Align.CENTER, Align.CENTER, Align.MIN))
+    return body + cap
+
+
 def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
                          depth: float, cfg: dict) -> tuple[Part, list, None]:
     """Lay the item lanes across the depth (front -> back). Returns
@@ -120,13 +161,21 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
         nonlocal cav
         cav = p if cav is None else cav + p
 
-    y = GF_WALL + EDGE_MARGIN
+    # Lay the lanes as a stack across the cross-axis. A single item is centred in
+    # the depth (symmetric walls); a multi-item stack keeps the front edge margin.
+    stack = sum(_lane_width(it) for it in items) + LANE_GAP * (len(items) - 1)
+    if len(items) == 1:
+        y = (Ly - stack) / 2
+    else:
+        y = GF_WALL + EDGE_MARGIN
     lanes = []                                  # (item, y_centre, free_ledge_x0 or None)
     for it in items:
         w = _lane_width(it)
         yc = y + w / 2
         ledge_x0 = None
-        if it.get("kind") == "block":
+        if it.get("kind") == "blade":
+            cut(_blade_pocket(GF_WALL + EDGE_MARGIN, yc, it, total_h))
+        elif it.get("kind") == "block":
             pd = float(it["length"]) + 2 * BLOCK_CLEAR
             xc = GF_WALL + EDGE_MARGIN + pd / 2      # align to the left wall
             cut(_block_pocket(xc, yc, it, total_h))
@@ -154,6 +203,8 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
         VW = 1.6                                    # void inset from the lane walls
         for it, yc, ledge_x0 in lanes:
             w = _lane_width(it)
+            if it.get("kind") == "blade":
+                continue                         # blade pockets are already deep; no void
             if it.get("kind") == "block":
                 pd = float(it["length"]) + 2 * BLOCK_CLEAR
                 bx = GF_WALL + EDGE_MARGIN + pd / 2
