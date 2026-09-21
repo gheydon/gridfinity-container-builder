@@ -180,7 +180,10 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
         ledge_x0 = None
         floor_z = float(params.get("floor", 0.0))
         if it.get("kind") == "blade":
-            cut(_blade_pocket(GF_WALL + EDGE_MARGIN, yc, it, total_h, floor_z))
+            # centre the blade along the length (equal margins both ends), not
+            # jammed against the left wall like a labelled block
+            bx0 = max(GF_WALL + EDGE_MARGIN, (Lx - float(it["length"])) / 2)
+            cut(_blade_pocket(bx0, yc, it, total_h, floor_z))
         elif it.get("kind") == "block":
             pd = float(it["length"]) + 2 * BLOCK_CLEAR
             xc = GF_WALL + EDGE_MARGIN + pd / 2      # align to the left wall
