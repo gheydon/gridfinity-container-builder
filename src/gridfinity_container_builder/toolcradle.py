@@ -90,27 +90,31 @@ def _trough(xc: float, yc: float, r: float, length: float, total_h: float) -> Pa
         radius=r, height=length, align=(Align.CENTER, Align.CENTER, Align.CENTER))
 
 
-def _block_pocket(xc: float, yc: float, it: dict, total_h: float) -> Part:
-    """Tapered block pocket (wide head -> narrow tail), square corners, open top."""
+def _block_pocket(xc: float, yc: float, it: dict, total_h: float, floor_z: float = 0.0) -> Part:
+    """Tapered block pocket (wide head -> narrow tail), square corners, open top.
+    The pocket floor never sinks below floor_z, so a deep item in a short bin keeps
+    a solid floor over the gridfinity base instead of cutting through the bottom."""
     hw = float(it["headW"]) + 2 * BLOCK_CLEAR
     tw = float(it["tailW"]) + 2 * BLOCK_CLEAR
     pd = float(it["length"]) + 2 * BLOCK_CLEAR
     hl = float(it["headLen"])
     depth = float(it["depth"])
+    z0 = max(total_h - depth, floor_z)
     pts = [(-pd / 2, hw / 2), (-pd / 2 + hl, hw / 2), (pd / 2, tw / 2),
            (pd / 2, -tw / 2), (-pd / 2 + hl, -hw / 2), (-pd / 2, -hw / 2)]
     with BuildSketch() as sk:
         with BuildLine():
             Polyline(*pts, close=True)
         make_face()
-    return Pos(xc, yc, total_h - depth) * extrude(sk.sketch, amount=depth + 4)
+    return Pos(xc, yc, z0) * extrude(sk.sketch, amount=total_h - z0 + 4)
 
 
-def _blade_pocket(x0: float, yc: float, it: dict, total_h: float) -> Part:
+def _blade_pocket(x0: float, yc: float, it: dict, total_h: float, floor_z: float = 0.0) -> Part:
     """Keyhole edge-slot for a folded tool stored ON ITS EDGE (angle finder,
     caliper, folding rule): a round-ended HEAD pocket -> a NECK -> a thin deep
     SLOT for the folded blades. Head closed end sits at x0 (left interior wall);
     the pocket runs +X. Params are final POCKET dims (clearance already baked in).
+    The floor never sinks below floor_z (keeps a solid bottom over the base).
     """
     headW = float(it["headW"])
     headLen = float(it["headLen"])
@@ -135,10 +139,11 @@ def _blade_pocket(x0: float, yc: float, it: dict, total_h: float) -> Part:
         with BuildLine():
             Polyline(*pts, close=True)
         make_face()
-    z0 = total_h - depth
-    body = Pos(x0, yc, z0) * extrude(sk.sketch, amount=depth + 4)
+    z0 = max(total_h - depth, floor_z)
+    h = total_h - z0 + 4
+    body = Pos(x0, yc, z0) * extrude(sk.sketch, amount=h)
     cap = Pos(x0 + r, yc, z0) * Cylinder(               # round the closed head end
-        radius=r, height=depth + 4, align=(Align.CENTER, Align.CENTER, Align.MIN))
+        radius=r, height=h, align=(Align.CENTER, Align.CENTER, Align.MIN))
     return body + cap
 
 
@@ -173,12 +178,13 @@ def tool_cradle_interior(cell: dict, params: dict, total_h: float, width: float,
         w = _lane_width(it)
         yc = y + w / 2
         ledge_x0 = None
+        floor_z = float(params.get("floor", 0.0))
         if it.get("kind") == "blade":
-            cut(_blade_pocket(GF_WALL + EDGE_MARGIN, yc, it, total_h))
+            cut(_blade_pocket(GF_WALL + EDGE_MARGIN, yc, it, total_h, floor_z))
         elif it.get("kind") == "block":
             pd = float(it["length"]) + 2 * BLOCK_CLEAR
             xc = GF_WALL + EDGE_MARGIN + pd / 2      # align to the left wall
-            cut(_block_pocket(xc, yc, it, total_h))
+            cut(_block_pocket(xc, yc, it, total_h, floor_z))
             if it.get("scoop", True):                # finger scoop at the narrow tail end
                 cut(Pos(xc + pd / 2 - 3, yc, total_h) * Sphere(SCOOP_R))
             ledge_x0 = xc + pd / 2
