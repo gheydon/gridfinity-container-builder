@@ -31,8 +31,11 @@ CELL = PITCH - TOL  # 41.5, a single foot's top size
 # foot cross-section as (inset_from_top, z) — the standard 0.8/1.8/2.15 foot
 FOOT_PROFILE = [(2.954, 0.0), (2.15, 0.804), (2.15, 2.604), (0.0, 4.754)]
 # stacking-lip inner flare as (inset, dz_above_wall_top); the base (WALL, 0) is
-# the top of the straight cavity, so it is implied, not repeated here.
-LIP_FLARE = [(1.9, 0.7), (1.9, 2.5), (0.0, 3.917)]
+# the top of the straight cavity, so it is implied, not repeated here. The top
+# stops at LIP_TOP_FLAT inset (not 0) so the rim is a flat ledge, not a fragile
+# knife edge — a stacked bin's base rests on it cleanly.
+LIP_TOP_FLAT = 0.6
+LIP_FLARE = [(1.9, 0.7), (1.9, 2.5), (LIP_TOP_FLAT, 3.917)]
 LIP_HEIGHT = LIP_FLARE[-1][1]  # 3.917
 
 # bottom magnet / screw holes (gridfinity standard), 4 per cell
@@ -196,7 +199,7 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
             cav = [(W - 2 * WALL, L - 2 * WALL, RAD - WALL, wall_top)]
             for ins, dz in LIP_FLARE:
                 cav.append((W - 2 * ins, L - 2 * ins, RAD - ins, wall_top + dz))
-            cav.append((W, L, RAD, lip_top + 2))
+            cav.append((W - 2 * LIP_TOP_FLAT, L - 2 * LIP_TOP_FLAT, RAD - LIP_TOP_FLAT, lip_top + 2))
             solid = solid.cut(_ruled_loft(cav))
         # without a lip there is nothing to carve — the body is already solid
     elif hollow:
@@ -206,7 +209,7 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
         if stacking_lip:
             for ins, dz in LIP_FLARE:
                 cav.append((W - 2 * ins, L - 2 * ins, RAD - ins, wall_top + dz))
-            cav.append((W, L, RAD, lip_top + 2))       # punch through the rim
+            cav.append((W - 2 * LIP_TOP_FLAT, L - 2 * LIP_TOP_FLAT, RAD - LIP_TOP_FLAT, lip_top + 2))
         else:
             cav.append((W - 2 * WALL, L - 2 * WALL, RAD - WALL, wall_top + 2))
         solid = solid.cut(_ruled_loft(cav))
