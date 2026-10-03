@@ -152,8 +152,9 @@ def _base_hollow_pattern(base_hollows: bool, magnet_holes: bool, screw_holes: bo
 
 def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
                stacking_lip: bool = True, hollow: bool = True,
-               rim_groove: bool = True, base_hollows: bool = True,
-               magnet_holes: bool = False, screw_holes: bool = False) -> Part.Shape:
+               fill_inside: bool = False, rim_groove: bool = True,
+               base_hollows: bool = True, magnet_holes: bool = False,
+               screw_holes: bool = False) -> Part.Shape:
     """Build a gridfinity container shell solid, base bottom on the XY plane.
 
     Args:
@@ -161,6 +162,9 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
         height_units: overall height in 7 mm units (>= 2), excluding the lip.
         stacking_lip: add the gridfinity stacking lip on the rim.
         hollow: carve the interior cavity (an empty bin); False = solid block.
+        fill_inside: keep the full exterior (lip/groove/feet/base hollows) but
+            leave the interior SOLID to the rim — a blank to subtract your own
+            compartments from. Overrides ``hollow``.
         rim_groove: recess the Pred ring around the outer wall below the lip.
         base_hollows: Pred kite pockets (+ corner tombstones) under each foot.
         magnet_holes: 6.5 mm magnet holes (x4/cell) — replaces the tombstones.
@@ -186,7 +190,16 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
         Vector(0, 0, lip_top - FOOT_PROFILE[-1][1]))
     solid = prism.fuse(feet)
 
-    if hollow:
+    if fill_inside:
+        # solid interior to the rim; only carve the lip recess so the lip remains
+        if stacking_lip:
+            cav = [(W - 2 * WALL, L - 2 * WALL, RAD - WALL, wall_top)]
+            for ins, dz in LIP_FLARE:
+                cav.append((W - 2 * ins, L - 2 * ins, RAD - ins, wall_top + dz))
+            cav.append((W, L, RAD, lip_top + 2))
+            solid = solid.cut(_ruled_loft(cav))
+        # without a lip there is nothing to carve — the body is already solid
+    elif hollow:
         floor_z = BASE_H + FLOOR
         cav = [(W - 2 * WALL, L - 2 * WALL, RAD - WALL, floor_z),
                (W - 2 * WALL, L - 2 * WALL, RAD - WALL, wall_top)]

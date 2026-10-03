@@ -33,6 +33,11 @@ class GridfinityBin:
             obj.addProperty("App::PropertyBool", "Hollow", "Gridfinity",
                             "Carve the interior (empty bin). Off = solid block")
             obj.Hollow = True
+        if not hasattr(obj, "FillInside"):
+            obj.addProperty("App::PropertyBool", "FillInside", "Gridfinity",
+                            "Keep the exterior but fill the interior solid (blank to carve). "
+                            "Overrides Hollow")
+            obj.FillInside = False
         if not hasattr(obj, "RimGroove"):
             obj.addProperty("App::PropertyBool", "RimGroove", "Gridfinity",
                             "Recessed Pred ring around the outer wall below the lip")
@@ -60,8 +65,9 @@ class GridfinityBin:
         gy = int(obj.GridY)
         hu = int(obj.HeightUnits)
         obj.Shape = make_shell(gx, gy, hu, bool(obj.StackingLip), bool(obj.Hollow),
-                               bool(obj.RimGroove), bool(obj.BaseHollows),
-                               bool(obj.MagnetHoles), bool(obj.ScrewHoles))
+                               bool(obj.FillInside), bool(obj.RimGroove),
+                               bool(obj.BaseHollows), bool(obj.MagnetHoles),
+                               bool(obj.ScrewHoles))
         if hasattr(obj, "Size"):
             bb = obj.Shape.BoundBox
             obj.Size = "%.1f x %.1f x %.1f mm" % (bb.XLength, bb.YLength, bb.ZLength)

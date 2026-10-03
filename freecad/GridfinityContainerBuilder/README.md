@@ -48,6 +48,7 @@ Restart FreeCAD and pick **Gridfinity Container** from the workbench dropdown.
   - **BaseHollows** — Pred kite pockets + corner tombstones under each foot
   - **MagnetHoles / ScrewHoles** — base holes (magnets replace the tombstones)
   - **Hollow** — empty bin (off = solid block, a base for future internals)
+  - **FillInside** — keep the exterior but fill the interior solid: a blank to subtract your own compartments from (overrides Hollow)
   - **Size** — overall W × D × H in mm (read-only)
 
 The solid rebuilds on recompute. Export to STEP/STL as usual.

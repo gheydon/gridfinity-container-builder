@@ -29,6 +29,7 @@ def _show_dialog():
     gx = spin(1, 100, 2); gy = spin(1, 100, 1); hu = spin(2, 100, 6)
     lip = QtWidgets.QCheckBox(); lip.setChecked(True)
     hollow = QtWidgets.QCheckBox(); hollow.setChecked(True)
+    fill = QtWidgets.QCheckBox(); fill.setChecked(False)
     groove = QtWidgets.QCheckBox(); groove.setChecked(True)
     hollows = QtWidgets.QCheckBox(); hollows.setChecked(True)
     mag = QtWidgets.QCheckBox(); mag.setChecked(False)
@@ -40,6 +41,7 @@ def _show_dialog():
     form.addRow("Height (x 7 mm):", hu)
     form.addRow("Stacking lip:", lip)
     form.addRow("Hollow interior:", hollow)
+    form.addRow("Fill inside (carve blank):", fill)
     form.addRow("Rim groove:", groove)
     form.addRow("Base hollows:", hollows)
     form.addRow("Magnet holes:", mag)
@@ -66,6 +68,7 @@ def _show_dialog():
     return {
         "GridX": gx.value(), "GridY": gy.value(), "HeightUnits": hu.value(),
         "StackingLip": lip.isChecked(), "Hollow": hollow.isChecked(),
+        "FillInside": fill.isChecked(),
         "RimGroove": groove.isChecked(), "BaseHollows": hollows.isChecked(),
         "MagnetHoles": mag.isChecked(), "ScrewHoles": scr.isChecked(),
     }
