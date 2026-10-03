@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<package format="1" xmlns="https://wiki.freecad.org/Package_Metadata">
+  <name>Gridfinity Container Builder</name>
+  <description>Parametric gridfinity container shells, ported from the gridfinity-container-builder (build123d) design. v1 covers the external shell: grid size, height in 7 mm units, stacking lip and hollow interior.</description>
+  <version>0.1.0</version>
+  <date>2026-10-03</date>
+  <maintainer email="gordon@heydon.com.au">Gordon Heydon</maintainer>
+  <license file="LICENSE">CC-BY-NC-4.0</license>
+  <url type="repository" branch="main">https://github.com/gheydon/gridfinity-container-builder</url>
+  <icon>icons/gfcb.svg</icon>
+  <content>
+    <workbench>
+      <classname>GridfinityContainerWorkbench</classname>
+      <name>Gridfinity Container</name>
+      <description>Create parametric gridfinity bins.</description>
+      <icon>icons/gfcb.svg</icon>
+    </workbench>
+  </content>
+</package>
