@@ -18,6 +18,8 @@ The shell reproduces what the build123d generator makes:
 - Walls to **`HeightUnits × 7 mm`** (excluding the lip).
 - **Stacking lip** built as the flared top of the interior cavity, so it mates with real gridfinity bins/baseplates.
 - Interior wall **2.6 mm**, floor **2 mm** above the base.
+- **Pred rim groove** — recessed ring around the outer wall below the lip.
+- **Magnet holes** (Ø6.5 × 2.4) and **screw holes** (Ø3 × 6), 4 per cell, in the base.
 
 Built from ruled lofts of rounded rectangles — exact for these straight 45°
 chamfers and fast (a 2×1 bin builds in ~1 s).
@@ -35,12 +37,16 @@ Restart FreeCAD and pick **Gridfinity Container** from the workbench dropdown.
 
 ## Use
 
-- Click **New Gridfinity Bin** (toolbar / menu) to add a `GridfinityBin` object.
-- Edit it in the data panel:
-  - **GridX / GridY** — footprint in grid units
+- Click **New Gridfinity Bin** (toolbar / menu). A dialog asks for the size and
+  options (with a live mm readout); click OK to create the bin.
+- Edit any time in the data panel (**Gridfinity** group):
+  - **GridX / GridY** — footprint in grid units (× 42 mm)
   - **HeightUnits** — height in 7 mm units (≥ 2)
   - **StackingLip** — add the rim lip
+  - **RimGroove** — the recessed Pred ring below the lip
+  - **MagnetHoles / ScrewHoles** — base holes
   - **Hollow** — empty bin (off = solid block, a base for future internals)
+  - **Size** — overall W × D × H in mm (read-only)
 
 The solid rebuilds on recompute. Export to STEP/STL as usual.
 
