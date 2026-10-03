@@ -37,14 +37,18 @@ class GridfinityBin:
             obj.addProperty("App::PropertyBool", "RimGroove", "Gridfinity",
                             "Recessed Pred ring around the outer wall below the lip")
             obj.RimGroove = True
+        if not hasattr(obj, "BaseHollows"):
+            obj.addProperty("App::PropertyBool", "BaseHollows", "Gridfinity",
+                            "Pred filament-saving kite pockets + corner tombstones under each foot")
+            obj.BaseHollows = True
         if not hasattr(obj, "MagnetHoles"):
             obj.addProperty("App::PropertyBool", "MagnetHoles", "Gridfinity",
-                            "6.5 mm magnet holes (x4 per cell) in the base")
-            obj.MagnetHoles = True
+                            "6.5 mm magnet holes (x4/cell); replaces the tombstones")
+            obj.MagnetHoles = False
         if not hasattr(obj, "ScrewHoles"):
             obj.addProperty("App::PropertyBool", "ScrewHoles", "Gridfinity",
                             "3 mm screw holes (x4 per cell) in the base")
-            obj.ScrewHoles = True
+            obj.ScrewHoles = False
         # read-only mm readout so the actual box size is visible
         if not hasattr(obj, "Size"):
             obj.addProperty("App::PropertyString", "Size", "Gridfinity",
@@ -56,8 +60,8 @@ class GridfinityBin:
         gy = int(obj.GridY)
         hu = int(obj.HeightUnits)
         obj.Shape = make_shell(gx, gy, hu, bool(obj.StackingLip), bool(obj.Hollow),
-                               bool(obj.RimGroove), bool(obj.MagnetHoles),
-                               bool(obj.ScrewHoles))
+                               bool(obj.RimGroove), bool(obj.BaseHollows),
+                               bool(obj.MagnetHoles), bool(obj.ScrewHoles))
         if hasattr(obj, "Size"):
             bb = obj.Shape.BoundBox
             obj.Size = "%.1f x %.1f x %.1f mm" % (bb.XLength, bb.YLength, bb.ZLength)

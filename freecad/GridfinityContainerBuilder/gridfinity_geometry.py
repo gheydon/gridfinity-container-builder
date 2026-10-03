@@ -42,6 +42,19 @@ MAGNET_H = 2.4
 SCREW_R = 1.5
 SCREW_H = 6.0
 
+# Pred filament-saving foot hollows: four quadrant "kite" pockets (split by a
+# plus-cross) up to the base top, plus shallow corner "tombstone" pills at the
+# magnet spots (skipped when magnet holes are on). Measured from Pred's bin.
+KITE_BAND = 1.3     # pocket edge to the cell centreline
+KITE_OUTER = 15.7   # pocket edge toward the cell edge
+KITE_CORNER_D = 18.6  # 45-degree outer-corner cut: |x| + |y| = D
+KITE_CENTRE = 5.8   # 45-degree chamfer at the centre corner
+KITE_FILLET = 0.5
+ARCH_POS = 13.0     # tombstone head at the magnet position
+ARCH_R = 2.25       # tombstone half-width
+ARCH_LEN = 3.25     # head-to-tail circle separation (toward the centre)
+ARCH_DEPTH = 1.0
+
 # Pred rim groove (a recessed ring around the outer wall just below the lip)
 GROOVE_DEPTH = 0.7
 GROOVE_FLAT = 1.0      # flat band below the wall top
@@ -90,10 +103,57 @@ def _rim_groove_cutter(W, L, wall_top):
     return band.cut(core)
 
 
+def _kite_solid(height: float) -> Part.Shape:
+    """One quadrant kite pocket, filleted corners, extruded ``height`` up from z=0."""
+    a, m, D, c = KITE_BAND, KITE_OUTER, KITE_CORNER_D, KITE_CENTRE
+    pts = [(-a, -(c - a)), (-a, -m), (-(D - m), -m), (-m, -(D - m)), (-m, -a), (-(c - a), -a)]
+    wire = Part.makePolygon([Vector(x, y, 0) for x, y in pts] + [Vector(pts[0][0], pts[0][1], 0)])
+    sol = Part.Face(wire).extrude(Vector(0, 0, height))
+    vedges = [e for e in sol.Edges
+              if abs(e.tangentAt(e.FirstParameter).z) > 0.99]
+    try:
+        sol = sol.makeFillet(KITE_FILLET, vedges)
+    except Exception:
+        pass
+    return sol
+
+
+def _base_hollow_pattern(base_hollows: bool, magnet_holes: bool, screw_holes: bool):
+    """Per-cell bottom cutters, centred on a cell at the origin: four kite pockets
+    (+ corner tombstones when no magnets) and/or magnet/screw holes."""
+    parts = []
+    if base_hollows:
+        kite = _kite_solid(BASE_H + 0.5)
+        kite.translate(Vector(0, 0, -0.5))
+        for ang in (0, 90, 180, 270):
+            k = kite.copy()
+            k.rotate(Vector(0, 0, 0), Vector(0, 0, 1), ang)
+            parts.append(k)
+        if not magnet_holes:   # tombstones share the magnet spots
+            sep, r, depth = ARCH_LEN, ARCH_R, ARCH_DEPTH + 0.5
+            slot = Part.makeBox(sep, 2 * r, depth, Vector(-sep / 2, -r, 0)).fuse([
+                Part.makeCylinder(r, depth, Vector(-sep / 2, 0, 0)),
+                Part.makeCylinder(r, depth, Vector(sep / 2, 0, 0))])
+            slot.translate(Vector(-(ARCH_POS * 2 ** 0.5) + sep / 2, 0, -0.5))
+            slot.rotate(Vector(0, 0, 0), Vector(0, 0, 1), 45)
+            for ang in (0, 90, 180, 270):
+                s = slot.copy()
+                s.rotate(Vector(0, 0, 0), Vector(0, 0, 1), ang)
+                parts.append(s)
+    for dx in (-HOLE_OFFSET, HOLE_OFFSET):
+        for dy in (-HOLE_OFFSET, HOLE_OFFSET):
+            p = Vector(dx, dy, -0.01)
+            if magnet_holes:
+                parts.append(Part.makeCylinder(MAGNET_R, MAGNET_H + 0.01, p, Vector(0, 0, 1)))
+            if screw_holes:
+                parts.append(Part.makeCylinder(SCREW_R, SCREW_H + 0.01, p, Vector(0, 0, 1)))
+    return parts
+
+
 def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
                stacking_lip: bool = True, hollow: bool = True,
-               rim_groove: bool = True, magnet_holes: bool = True,
-               screw_holes: bool = True) -> Part.Shape:
+               rim_groove: bool = True, base_hollows: bool = True,
+               magnet_holes: bool = False, screw_holes: bool = False) -> Part.Shape:
     """Build a gridfinity container shell solid, base bottom on the XY plane.
 
     Args:
@@ -102,8 +162,9 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
         stacking_lip: add the gridfinity stacking lip on the rim.
         hollow: carve the interior cavity (an empty bin); False = solid block.
         rim_groove: recess the Pred ring around the outer wall below the lip.
-        magnet_holes: 6.5 mm magnet holes (x4 per cell) in the base.
-        screw_holes: 3 mm screw holes (x4 per cell) in the base.
+        base_hollows: Pred kite pockets (+ corner tombstones) under each foot.
+        magnet_holes: 6.5 mm magnet holes (x4/cell) — replaces the tombstones.
+        screw_holes: 3 mm screw holes (x4/cell) in the base.
     """
     gx = max(1, int(grid_x))
     gy = max(1, int(grid_y))
@@ -140,18 +201,15 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
     if rim_groove:
         solid = solid.cut(_rim_groove_cutter(W, L, wall_top))
 
-    # bottom magnet / screw holes — 4 per cell, cut up from the base bottom
-    if magnet_holes or screw_holes:
+    # bottom hollows / holes — one per-cell pattern replicated across the grid
+    pattern = _base_hollow_pattern(base_hollows, magnet_holes, screw_holes)
+    if pattern:
         cutters = []
         for cx, cy in _cell_centres(gx, gy):
-            for dx in (-HOLE_OFFSET, HOLE_OFFSET):
-                for dy in (-HOLE_OFFSET, HOLE_OFFSET):
-                    p = Vector(cx + dx, cy + dy, -0.01)
-                    if magnet_holes:
-                        cutters.append(Part.makeCylinder(MAGNET_R, MAGNET_H + 0.01, p, Vector(0, 0, 1)))
-                    if screw_holes:
-                        cutters.append(Part.makeCylinder(SCREW_R, SCREW_H + 0.01, p, Vector(0, 0, 1)))
-        if cutters:
-            solid = solid.cut(cutters)
+            for c in pattern:
+                cc = c.copy()
+                cc.translate(Vector(cx, cy, 0))
+                cutters.append(cc)
+        solid = solid.cut(cutters)
 
     return solid.removeSplitter()

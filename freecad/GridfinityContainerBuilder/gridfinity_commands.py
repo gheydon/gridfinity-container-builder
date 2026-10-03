@@ -30,8 +30,9 @@ def _show_dialog():
     lip = QtWidgets.QCheckBox(); lip.setChecked(True)
     hollow = QtWidgets.QCheckBox(); hollow.setChecked(True)
     groove = QtWidgets.QCheckBox(); groove.setChecked(True)
-    mag = QtWidgets.QCheckBox(); mag.setChecked(True)
-    scr = QtWidgets.QCheckBox(); scr.setChecked(True)
+    hollows = QtWidgets.QCheckBox(); hollows.setChecked(True)
+    mag = QtWidgets.QCheckBox(); mag.setChecked(False)
+    scr = QtWidgets.QCheckBox(); scr.setChecked(False)
     size = QtWidgets.QLabel()
 
     form.addRow("Grid X (x 42 mm):", gx)
@@ -40,6 +41,7 @@ def _show_dialog():
     form.addRow("Stacking lip:", lip)
     form.addRow("Hollow interior:", hollow)
     form.addRow("Rim groove:", groove)
+    form.addRow("Base hollows:", hollows)
     form.addRow("Magnet holes:", mag)
     form.addRow("Screw holes:", scr)
     form.addRow("Overall size:", size)
@@ -64,8 +66,8 @@ def _show_dialog():
     return {
         "GridX": gx.value(), "GridY": gy.value(), "HeightUnits": hu.value(),
         "StackingLip": lip.isChecked(), "Hollow": hollow.isChecked(),
-        "RimGroove": groove.isChecked(), "MagnetHoles": mag.isChecked(),
-        "ScrewHoles": scr.isChecked(),
+        "RimGroove": groove.isChecked(), "BaseHollows": hollows.isChecked(),
+        "MagnetHoles": mag.isChecked(), "ScrewHoles": scr.isChecked(),
     }
 
 

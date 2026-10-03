@@ -19,7 +19,8 @@ The shell reproduces what the build123d generator makes:
 - **Stacking lip** built as the flared top of the interior cavity, so it mates with real gridfinity bins/baseplates.
 - Interior wall **2.6 mm**, floor **2 mm** above the base.
 - **Pred rim groove** — recessed ring around the outer wall below the lip.
-- **Magnet holes** (Ø6.5 × 2.4) and **screw holes** (Ø3 × 6), 4 per cell, in the base.
+- **Pred base hollows** — four kite pockets per foot (split by a plus-cross) plus the corner tombstone pills, to save filament.
+- Optional **magnet holes** (Ø6.5 × 2.4, replace the tombstones) and **screw holes** (Ø3 × 6), 4 per cell.
 
 Built from ruled lofts of rounded rectangles — exact for these straight 45°
 chamfers and fast (a 2×1 bin builds in ~1 s).
@@ -44,7 +45,8 @@ Restart FreeCAD and pick **Gridfinity Container** from the workbench dropdown.
   - **HeightUnits** — height in 7 mm units (≥ 2)
   - **StackingLip** — add the rim lip
   - **RimGroove** — the recessed Pred ring below the lip
-  - **MagnetHoles / ScrewHoles** — base holes
+  - **BaseHollows** — Pred kite pockets + corner tombstones under each foot
+  - **MagnetHoles / ScrewHoles** — base holes (magnets replace the tombstones)
   - **Hollow** — empty bin (off = solid block, a base for future internals)
   - **Size** — overall W × D × H in mm (read-only)
 
