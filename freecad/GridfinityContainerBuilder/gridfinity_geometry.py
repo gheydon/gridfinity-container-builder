@@ -239,11 +239,14 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
 # ---------------------------------------------------------------------------
 
 def blade_pocket_cutter(grid_x, grid_y, height_units, length, head_w, head_len,
-                        neck_w, neck_len, slot_w, neck_tap=8.0, slot_tap=8.0):
-    """A keyhole cutter (head + neck + slot), centred along the bin length, that
-    bottoms out at the interior floor so the base is never cut through."""
+                        neck_w, neck_len, slot_w, neck_tap=8.0, slot_tap=8.0,
+                        floor_z=None):
+    """A keyhole cutter (head + neck + slot), centred along the bin length. The
+    pocket floor sits at ``floor_z`` (default = the interior floor, so the base
+    is never cut through); pass a lower value for a deeper pocket on a solid base."""
     wall_top = max(2, int(height_units)) * UNIT
-    floor_z = BASE_H + FLOOR
+    if floor_z is None:
+        floor_z = BASE_H + FLOOR
     r = head_w / 2.0
     xa, xb = r, head_len
     xc = xb + neck_tap
@@ -257,8 +260,16 @@ def blade_pocket_cutter(grid_x, grid_y, height_units, length, head_w, head_len,
     h = wall_top + LIP_HEIGHT + 3 - floor_z            # up past the rim/lip
     cutter = Part.Face(wire).extrude(Vector(0, 0, h))
     cutter = cutter.fuse(Part.makeCylinder(r, h, Vector(r, 0, 0)))  # round closed head end
-    cutter.translate(Vector(-length / 2.0, 0, floor_z))            # centre + floor-clamp
+    cutter.translate(Vector(-length / 2.0, 0, floor_z))            # centre along length
     return cutter
+
+
+def _slot_cutter(x_from, x_to, width, floor_z, top_z):
+    """A straight slot (rounded far end) from x_from to x_to in bin-local X."""
+    r = width / 2.0
+    hh = top_z - floor_z
+    box = Part.makeBox(x_to - x_from, width, hh, Vector(x_from, -r, floor_z))
+    return box.fuse(Part.makeCylinder(r, hh, Vector(x_to, 0, floor_z)))
 
 
 def make_blade_holder(grid_x, grid_y, height_units, length, head_w, head_len,
@@ -274,7 +285,22 @@ def make_blade_holder(grid_x, grid_y, height_units, length, head_w, head_len,
 
 
 def make_gemred_holder():
-    """GemRed 82305 digital angle finder holder (1x6, 5u) — the Printables model
-    (printables.com/model/430136) rebuilt natively on our gridfinity container."""
-    return make_blade_holder(6, 1, 5, length=224.0, head_w=21.0, head_len=32.0,
-                             neck_w=15.0, neck_len=40.0, slot_w=4.5)
+    """GemRed 82305 digital angle finder holder (1x6, 5u), matched to the
+    Printables model (printables.com/model/430136, the community STL): a solid
+    base and a TWO-DEPTH pocket — a wide, shallow head+neck recess for the dial
+    (~17.5 mm) and a deep, narrow slot for the folded blades (~29 mm) — built on
+    our gridfinity container (so it also gains a proper stacking lip)."""
+    gx, gy, units = 6, 1, 5
+    wall_top = units * UNIT
+    top_z = wall_top + LIP_HEIGHT + 3
+    length = 221.0
+    # solid base (like the STL) so the deep slot keeps a floor
+    blank = make_shell(gx, gy, units, stacking_lip=True, hollow=True, fill_inside=True,
+                       rim_groove=True, base_hollows=False,
+                       magnet_holes=False, screw_holes=False)
+    shallow = blade_pocket_cutter(gx, gy, units, length, head_w=21.0, head_len=34.0,
+                                  neck_w=15.0, neck_len=36.0, slot_w=4.5,
+                                  neck_tap=6.0, slot_tap=6.0, floor_z=wall_top - 17.5)
+    deep = _slot_cutter(112.0, length, 4.5, wall_top - 29.2, top_z)
+    deep.translate(Vector(-length / 2.0, 0, 0))
+    return blank.cut(shallow.fuse(deep)).removeSplitter()
