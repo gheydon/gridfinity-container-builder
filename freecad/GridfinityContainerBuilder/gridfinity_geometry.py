@@ -284,23 +284,40 @@ def make_blade_holder(grid_x, grid_y, height_units, length, head_w, head_len,
     return blank.cut(cutter).removeSplitter()
 
 
-def make_gemred_holder():
-    """GemRed 82305 digital angle finder holder (1x6, 5u), matched to the
-    Printables model (printables.com/model/430136, the community STL): a solid
-    base and a TWO-DEPTH pocket — a wide, shallow head+neck recess for the dial
-    (~17.5 mm) and a deep, narrow slot for the folded blades (~29 mm) — built on
-    our gridfinity container (so it also gains a proper stacking lip)."""
-    gx, gy, units = 6, 1, 5
+# GemRed 82305 defaults (matched to the Printables STL 430136)
+GEMRED_DEFAULTS = dict(
+    grid_x=6, grid_y=1, height_units=5, length=221.0,
+    head_w=21.0, head_len=34.0, neck_w=15.0, neck_len=36.0, slot_w=4.5,
+    head_depth=17.5, slot_depth=29.2, deep_from=112.0,
+)
+
+
+def build_blade_holder(grid_x, grid_y, height_units, length, head_w, head_len,
+                       neck_w, neck_len, slot_w, head_depth, slot_depth, deep_from,
+                       stacking_lip=True, rim_groove=True):
+    """A folded-tool holder (angle finder / caliper / folding rule) on our
+    gridfinity container. Carved into a SOLID-base fill-inside blank:
+      * a wide shallow HEAD+NECK recess (``head_depth``) for the hinge/dial, and
+      * a deep narrow SLOT (``slot_depth``, from ``deep_from`` to the end) for the
+        folded blades.
+    Set ``slot_depth == head_depth`` for a plain single-depth keyhole."""
+    gx, gy = max(1, int(grid_x)), max(1, int(grid_y))
+    units = max(2, int(height_units))
     wall_top = units * UNIT
     top_z = wall_top + LIP_HEIGHT + 3
-    length = 221.0
-    # solid base (like the STL) so the deep slot keeps a floor
-    blank = make_shell(gx, gy, units, stacking_lip=True, hollow=True, fill_inside=True,
-                       rim_groove=True, base_hollows=False,
+    blank = make_shell(gx, gy, units, stacking_lip=stacking_lip, hollow=True,
+                       fill_inside=True, rim_groove=rim_groove, base_hollows=False,
                        magnet_holes=False, screw_holes=False)
-    shallow = blade_pocket_cutter(gx, gy, units, length, head_w=21.0, head_len=34.0,
-                                  neck_w=15.0, neck_len=36.0, slot_w=4.5,
-                                  neck_tap=6.0, slot_tap=6.0, floor_z=wall_top - 17.5)
-    deep = _slot_cutter(112.0, length, 4.5, wall_top - 29.2, top_z)
-    deep.translate(Vector(-length / 2.0, 0, 0))
-    return blank.cut(shallow.fuse(deep)).removeSplitter()
+    cut = blade_pocket_cutter(gx, gy, units, length, head_w, head_len, neck_w,
+                              neck_len, slot_w, neck_tap=6.0, slot_tap=6.0,
+                              floor_z=wall_top - head_depth)
+    if slot_depth > head_depth and deep_from < length:
+        deep = _slot_cutter(deep_from, length, slot_w, wall_top - slot_depth, top_z)
+        deep.translate(Vector(-length / 2.0, 0, 0))
+        cut = cut.fuse(deep)
+    return blank.cut(cut).removeSplitter()
+
+
+def make_gemred_holder():
+    """GemRed 82305 digital angle finder holder, matched to the Printables STL."""
+    return build_blade_holder(**GEMRED_DEFAULTS)

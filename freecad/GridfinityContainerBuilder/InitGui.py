@@ -13,7 +13,7 @@ class GridfinityContainerWorkbench(Gui.Workbench):
 
     def Initialize(self):
         import gridfinity_commands  # noqa: F401 — registers the commands
-        self.commands = ["GFCB_CreateBin"]
+        self.commands = ["GFCB_CreateBin", "GFCB_CreateBladeHolder"]
         self.appendToolbar("Gridfinity Container", self.commands)
         self.appendMenu("Gridfinity Container", self.commands)
 

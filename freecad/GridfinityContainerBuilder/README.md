@@ -40,6 +40,10 @@ Restart FreeCAD and pick **Gridfinity Container** from the workbench dropdown.
 
 - Click **New Gridfinity Bin** (toolbar / menu). A dialog asks for the size and
   options (with a live mm readout); click OK to create the bin.
+- Click **New Blade / Tool Holder** for a folded tool stored on edge (angle
+  finder / caliper / folding rule). The dialog (and the Data panel afterwards)
+  exposes every blade-pocket dimension — head, neck and slot widths/lengths, the
+  shallow head depth and the deep slot depth. Defaults to the **GemRed 82305**.
 - Edit any time in the data panel (**Gridfinity** group):
   - **GridX / GridY** — footprint in grid units (× 42 mm)
   - **HeightUnits** — height in 7 mm units (≥ 2)
