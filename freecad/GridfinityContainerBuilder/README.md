@@ -59,3 +59,20 @@ The solid rebuilds on recompute. Export to STEP/STL as usual.
 import gridfinity_object
 gridfinity_object.create_gridfinity_bin(GridX=3, GridY=2, HeightUnits=6)
 ```
+
+### Blade holders (folded tools stored on edge)
+
+A keyhole pocket (round head → neck → deep slot) carved into a fill-inside
+blank, for an angle finder / caliper / folding rule stored on its edge. Ported
+from the build123d "blade" tool cradle; the pocket bottoms out at the interior
+floor so the base is never cut through.
+
+```python
+import Part, FreeCAD as App
+import gridfinity_geometry as G
+shape = G.make_gemred_holder()          # GemRed 82305, 1x6, 5u (Printables 430136)
+# or a custom blade holder:
+# shape = G.make_blade_holder(6, 1, 5, length=224, head_w=21, head_len=32,
+#                             neck_w=15, neck_len=40, slot_w=4.5)
+App.newDocument("Holder").addObject("Part::Feature", "Holder").Shape = shape
+```

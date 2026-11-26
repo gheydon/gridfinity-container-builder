@@ -229,3 +229,52 @@ def make_shell(grid_x: int = 2, grid_y: int = 1, height_units: int = 6,
         solid = solid.cut(cutters)
 
     return solid.removeSplitter()
+
+
+# ---------------------------------------------------------------------------
+# Blade holders — a folded tool stored ON EDGE (angle finder, caliper, folding
+# rule): a round-ended HEAD pocket -> NECK -> thin deep SLOT, carved into a
+# fill-inside blank. Ported from the gridfinity-container-builder "blade" tool
+# cradle (the GemRed 82305 holder started here).
+# ---------------------------------------------------------------------------
+
+def blade_pocket_cutter(grid_x, grid_y, height_units, length, head_w, head_len,
+                        neck_w, neck_len, slot_w, neck_tap=8.0, slot_tap=8.0):
+    """A keyhole cutter (head + neck + slot), centred along the bin length, that
+    bottoms out at the interior floor so the base is never cut through."""
+    wall_top = max(2, int(height_units)) * UNIT
+    floor_z = BASE_H + FLOOR
+    r = head_w / 2.0
+    xa, xb = r, head_len
+    xc = xb + neck_tap
+    xd = xc + neck_len
+    xe = xd + slot_tap
+    xf = length
+    pts = [(xa, head_w / 2), (xb, head_w / 2), (xc, neck_w / 2), (xd, neck_w / 2),
+           (xe, slot_w / 2), (xf, slot_w / 2), (xf, -slot_w / 2), (xe, -slot_w / 2),
+           (xd, -neck_w / 2), (xc, -neck_w / 2), (xb, -head_w / 2), (xa, -head_w / 2)]
+    wire = Part.makePolygon([Vector(x, y, 0) for x, y in pts] + [Vector(pts[0][0], pts[0][1], 0)])
+    h = wall_top + LIP_HEIGHT + 3 - floor_z            # up past the rim/lip
+    cutter = Part.Face(wire).extrude(Vector(0, 0, h))
+    cutter = cutter.fuse(Part.makeCylinder(r, h, Vector(r, 0, 0)))  # round closed head end
+    cutter.translate(Vector(-length / 2.0, 0, floor_z))            # centre + floor-clamp
+    return cutter
+
+
+def make_blade_holder(grid_x, grid_y, height_units, length, head_w, head_len,
+                      neck_w, neck_len, slot_w, **shell_opts):
+    """A gridfinity bin (fill-inside blank) with a keyhole blade pocket carved in."""
+    opts = dict(stacking_lip=True, hollow=True, fill_inside=True, rim_groove=True,
+                base_hollows=True, magnet_holes=False, screw_holes=False)
+    opts.update(shell_opts)
+    blank = make_shell(grid_x, grid_y, height_units, **opts)
+    cutter = blade_pocket_cutter(grid_x, grid_y, height_units, length, head_w,
+                                 head_len, neck_w, neck_len, slot_w)
+    return blank.cut(cutter).removeSplitter()
+
+
+def make_gemred_holder():
+    """GemRed 82305 digital angle finder holder (1x6, 5u) — the Printables model
+    (printables.com/model/430136) rebuilt natively on our gridfinity container."""
+    return make_blade_holder(6, 1, 5, length=224.0, head_w=21.0, head_len=32.0,
+                             neck_w=15.0, neck_len=40.0, slot_w=4.5)
